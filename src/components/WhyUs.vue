@@ -107,10 +107,11 @@ h2 {
     background-color: #FFFFFF;
     border-radius: 4px;
     padding: 8px 64px 8px 10px;
-    height: 188px;
+    min-height: 120px;
     gap: 20px;
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
 }
 
 .card:hover {
@@ -119,8 +120,9 @@ h2 {
 }
 
 .wrap-img {
-    width: 30%;
-    aspect-ratio: 1;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
     border-radius: 4px;
     overflow: hidden;
     background-color: #E2E2E2;
@@ -138,6 +140,8 @@ h2 {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .card-text {
@@ -182,11 +186,12 @@ h2 {
 
     .card {
         padding: 8px 48px 8px 8px;
-        height: 160px;
+        min-height: 140px;
     }
 
     .wrap-img {
-        aspect-ratio: 1;
+        width: 110px;
+        height: 110px;
     }
 
     .card-title {
@@ -219,11 +224,12 @@ h2 {
 
     .card {
         padding: 8px 32px 8px 8px;
-        height: 140px;
+        min-height: 120px;
     }
 
     .wrap-img {
-        aspect-ratio: 1;
+        width: 100px;
+        height: 100px;
     }
 
     .card-title {
@@ -271,8 +277,8 @@ h2 {
     }
 
     .wrap-img {
-        width: 35%;
-        aspect-ratio: 1;
+        width: 100px;
+        height: 100px;
     }
 
     .card-text {
@@ -307,20 +313,20 @@ h2 {
     }
 
     .card {
-        flex-direction: column;
-        padding: 16px;
-        height: auto;
-        gap: 16px;
+        flex-direction: row;
+        padding: 12px;
+        height: 100px;
+        gap: 12px;
     }
 
     .card:hover {
-        transform: translateY(-4px);
+        transform: translateX(4px);
     }
 
     .wrap-img {
-        width: 100%;
-        height: 100px;
-        aspect-ratio: unset;
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
     }
 
     .card-text {

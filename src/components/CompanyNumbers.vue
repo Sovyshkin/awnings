@@ -72,7 +72,6 @@ h2 {
   gap: 20px;
   width: 100%;
   height: 403px;
-  max-width: 440px;
   background-size: cover;
   background-position: center;
   padding: 13px 33px;

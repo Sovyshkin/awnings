@@ -339,19 +339,7 @@ h2 {
   }
 
   .actions {
-    gap: 12px;
-  }
-
-  .btn {
-    width: 48px;
-    height: 40px;
-    padding: 6px 12px;
-    border-radius: 20px;
-  }
-
-  .btn img {
-    width: 16px;
-    height: 16px;
+    display: none;
   }
 
   .cards {

@@ -268,11 +268,19 @@ h3:hover {
     }
 
     .footer-nav {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 32px;
     }
 
-    .catalog, .client, .contact {
+    .catalog, .client {
+        max-width: 100%;
+        gap: 24px;
+    }
+
+    .contact {
+        grid-column: 1 / -1;
+        grid-row: 2;
         max-width: 100%;
         gap: 24px;
     }
@@ -321,6 +329,10 @@ h3:hover {
 
     p {
         font-size: 14px;
+    }
+
+    .footer-nav {
+        gap: 16px;
     }
 
     h3 {

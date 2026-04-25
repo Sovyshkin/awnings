@@ -3,7 +3,7 @@
     <AppHeader />
     <HeroSection />
     <WhatDoing />
-    <HowWork />
+    <HowWork :isMobile="isMobile" />
     <CompanyNumbers />
     <OurProjects />
     <WhyUs />
@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import AppHeader from './components/AppHeader.vue'
 import HeroSection from './components/HeroSection.vue'
 import WhatDoing from './components/WhatDoing.vue'
@@ -25,6 +25,20 @@ import Faq from './components/FaqBlock.vue'
 import AppFooter from './components/AppFooter.vue'
 
 const menuOpen = ref(false)
+const isMobile = ref(false)
+
+function checkMobile() {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 </script>
 
 <style>

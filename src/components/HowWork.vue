@@ -16,7 +16,12 @@
         @touchmove="onTouchMove"
         @touchend="onTouchEnd"
       >
-      <div class="cards" :style="{ transform: `translateX(-${cardOffset}px)` }">
+      <div
+        ref="cardsContainer"
+        class="cards"
+        :class="{ 'cards-mobile': !isDesktop }"
+        :style="isDesktop ? { transform: `translateX(-${cardOffset}px)` } : {}"
+      >
         <div class="card">
           <div class="card-text">
             <span class="card-title">Оставьте заявку</span>
@@ -71,7 +76,8 @@
             :key="n"
             class="step-bead"
             :class="{ active: n === activeStep }"
-            :style="{ left: `${getStepLeft(n)}px` }"
+            :style="{ left: isDesktop ? `${getStepLeft(n)}px` : undefined }"
+            @click="goToStep(n)"
           >
             {{ n }}
           </div>
@@ -82,17 +88,25 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+const props = defineProps({
+  isMobile: {
+    type: Boolean,
+    default: false
+  }
+})
 
 const activeStep = ref(1)
 const totalSteps = 4
+const cardsContainer = ref(null)
 
 const cardWidth = 440
 const cardGap = 20
-const stepWidth = 81
-const stepGap = 10
 
 const cardOffset = computed(() => (activeStep.value - 1) * (cardWidth + cardGap))
+
+const isDesktop = computed(() => !props.isMobile)
 
 function getStepLeft(stepNum) {
   if (stepNum === activeStep.value) {
@@ -104,15 +118,28 @@ function getStepLeft(stepNum) {
   return -200
 }
 
+function scrollToCard(step) {
+  if (cardsContainer.value && !isDesktop.value) {
+    const cardEl = cardsContainer.value.querySelector('.card')
+    if (cardEl) {
+      const cardWidth = cardEl.offsetWidth
+      const gap = 20
+      cardsContainer.value.scrollTo({ left: (step - 1) * (cardWidth + gap), behavior: 'smooth' })
+    }
+  }
+}
+
 function nextStep() {
   if (activeStep.value < totalSteps) {
     activeStep.value++
+    scrollToCard(activeStep.value)
   }
 }
 
 function prevStep() {
   if (activeStep.value > 1) {
     activeStep.value--
+    scrollToCard(activeStep.value)
   }
 }
 
@@ -128,6 +155,7 @@ function onTouchMove(e) {
 }
 
 function onTouchEnd() {
+  if (!isDesktop.value) return
   const diff = touchStartX - touchEndX
   if (Math.abs(diff) > 50) {
     if (diff > 0) {
@@ -137,6 +165,43 @@ function onTouchEnd() {
     }
   }
 }
+
+function onScroll() {
+  if (!cardsContainer.value || isDesktop.value) return
+  const cardEl = cardsContainer.value.querySelector('.card')
+  if (!cardEl) return
+  const cardWidth = cardEl.offsetWidth
+  const gap = 20
+  const scrollLeft = cardsContainer.value.scrollLeft
+  const newStep = Math.round(scrollLeft / (cardWidth + gap)) + 1
+  if (newStep >= 1 && newStep <= totalSteps && newStep !== activeStep.value) {
+    activeStep.value = newStep
+  }
+}
+
+function goToStep(step) {
+  activeStep.value = step
+  if (cardsContainer.value && !isDesktop.value) {
+    const cardEl = cardsContainer.value.querySelector('.card')
+    if (cardEl) {
+      const cardWidth = cardEl.offsetWidth
+      const gap = 20
+      cardsContainer.value.scrollTo({ left: (step - 1) * (cardWidth + gap), behavior: 'smooth' })
+    }
+  }
+}
+
+onMounted(() => {
+  if (cardsContainer.value) {
+    cardsContainer.value.addEventListener('scroll', onScroll, { passive: true })
+  }
+})
+
+onUnmounted(() => {
+  if (cardsContainer.value) {
+    cardsContainer.value.removeEventListener('scroll', onScroll)
+  }
+})
 </script>
 
 <style scoped>
@@ -223,6 +288,19 @@ h2 {
   align-items: flex-end;
   padding-left: 346px;
   transition: transform 0.5s ease;
+}
+
+.cards-mobile {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-left: 0;
+  justify-content: flex-start;
+}
+
+.cards-mobile::-webkit-scrollbar {
+  display: none;
 }
 
 .card {
@@ -360,11 +438,6 @@ h2 {
     font-size: 36px;
   }
 
-  .cards {
-    padding-left: 0;
-    justify-content: center;
-  }
-
   .card {
     width: 340px;
   }
@@ -476,20 +549,8 @@ h2 {
     height: 16px;
   }
 
-  .cards {
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-left: 0;
-  }
-
-  .cards::-webkit-scrollbar {
-    display: none;
-  }
-
   .card {
-    scroll-snap-align: center;
+    scroll-snap-align: start;
     width: 280px;
   }
 
@@ -526,21 +587,30 @@ h2 {
   }
 
   .rectangle {
-    left: 0;
-  }
-
-  .step-bead {
-    width: 48px;
-    height: 40px;
-    font-size: 16px;
+    display: none;
   }
 
   .steps-wrapper {
     height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .steps-track {
     height: 40px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .step-bead {
+    position: relative;
+    left: auto !important;
+    width: 48px;
+    height: 40px;
+    font-size: 16px;
   }
 }
 
@@ -552,6 +622,10 @@ h2 {
 
   h2 {
     font-size: 24px;
+  }
+
+  .actions {
+    gap: 8px;
   }
 
   .btn {
@@ -567,6 +641,7 @@ h2 {
   }
 
   .card {
+    scroll-snap-align: start;
     width: 260px;
     padding: 16px 24px 20px 16px;
   }
@@ -604,18 +679,14 @@ h2 {
     height: 20px;
   }
 
+  .steps-track {
+    gap: 8px;
+  }
+
   .step-bead {
     width: 40px;
     height: 36px;
     font-size: 14px;
-  }
-
-  .steps-wrapper {
-    height: 36px;
-  }
-
-  .steps-track {
-    height: 36px;
   }
 }
 </style>
