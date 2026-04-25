@@ -1,17 +1,24 @@
 <template>
-  <header class="header">
-      <div class="wrap-menu">
+  <header class="header" :class="{ 'menu-open': menuStore.isOpen }">
+      <div class="wrap-menu" @click="menuStore.toggle()">
         <div class="menu">
-          <div class="frame frame-1"></div>
-          <div class="frame frame-2"></div>
-          <div class="frame frame-3"></div>
+          <div class="frame frame-1" :class="{ 'active': menuStore.isOpen }"></div>
+          <div class="frame frame-2" :class="{ 'active': menuStore.isOpen }"></div>
+          <div class="frame frame-3" :class="{ 'active': menuStore.isOpen }"></div>
         </div>
       </div>
       <button class="btn">Каталог</button>
   </header>
+  <Transition name="slide-down">
+    <OpenMenu v-if="menuStore.isOpen" />
+  </Transition>
 </template>
 
 <script setup>
+import { useMenuStore } from '../stores/menuStore';
+import OpenMenu from './OpenMenu.vue';
+
+const menuStore = useMenuStore();
 </script>
 
 <style scoped>
@@ -21,7 +28,7 @@
   width: calc(100% - 80px);
   top: 34px;
   left: 40px;
-  z-index: 100;
+  z-index: 101;
   box-shadow: 0px 4px 4px 0px #00000040;
   backdrop-filter: blur(20.899999618530273px);
   display: flex;
@@ -29,11 +36,33 @@
   justify-content: space-between;
   padding: 20px;
   border-radius: 44px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.header.menu-open {
+  box-shadow: 0px 4px 4px 0px #00000040;
+  background-color: rgba(255, 255, 255, 0.073);
+  backdrop-filter: blur(20px);
+}
+
+.header > .wrap-menu,
+.header > .btn {
+  position: relative;
+  z-index: 102;
+}
+
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.5s ease;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-100%);
 }
 
 .header:hover {
-  box-shadow: 0px 8px 20px 0px #00000050;
   transform: translateY(-2px);
 }
 
@@ -63,12 +92,16 @@
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.wrap-menu:hover .frame-1 {
-  transform: translateY(4px) rotate(5deg);
+.frame-1.active {
+  transform: translateY(8px) rotate(45deg);
 }
 
-.wrap-menu:hover .frame-3 {
-  transform: translateY(-4px) rotate(-5deg);
+.frame-2.active {
+  opacity: 0;
+}
+
+.frame-3.active {
+  transform: translateY(-8px) rotate(-45deg);
 }
 
 .btn {
