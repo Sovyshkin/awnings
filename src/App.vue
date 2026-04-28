@@ -1,44 +1,17 @@
 <template>
   <div class="app">
-    <AppHeader />
-    <HeroSection />
-    <WhatDoing />
-    <HowWork :isMobile="isMobile" />
-    <CompanyNumbers />
-    <OurProjects />
-    <WhyUs />
-    <Faq />
+    <AppHeader :dark-header="route.path !== '/'" />
+    <router-view />
     <AppFooter />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import AppHeader from './components/AppHeader.vue'
-import HeroSection from './components/HeroSection.vue'
-import WhatDoing from './components/WhatDoing.vue'
-import HowWork from './components/HowWork.vue'
-import CompanyNumbers from './components/CompanyNumbers.vue'
-import OurProjects from './components/OurProjects.vue'
-import WhyUs from './components/WhyUs.vue'
-import Faq from './components/FaqBlock.vue'
 import AppFooter from './components/AppFooter.vue'
 
-const menuOpen = ref(false)
-const isMobile = ref(false)
-
-function checkMobile() {
-  isMobile.value = window.innerWidth <= 768
-}
-
-onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile)
-})
+const route = useRoute()
 </script>
 
 <style>

@@ -3,19 +3,19 @@
         <div class="content">
             <div class="nav-menu">
                 <div class="list-group">
-                    <a href="#" class="list-group-item">Беседки</a>
-                    <a href="#" class="list-group-item">Мангальные зоны</a>
-                    <a href="#" class="list-group-item">Навесы для авто</a>
+                    <router-link to="/catalog?category=besedka" class="list-group-item" @click="menuStore.toggle()">Беседки</router-link>
+                    <router-link to="/catalog?category=mangal" class="list-group-item" @click="menuStore.toggle()">Мангальные зоны</router-link>
+                    <router-link to="/catalog?category=naves" class="list-group-item" @click="menuStore.toggle()">Навесы для авто</router-link>
                 </div>
                 <div class="wrap-list">
                     <div class="list-group">
-                    <a href="#" class="list-group-item">О компании</a>
-                    <a href="#" class="list-group-item">Новости</a>
-                    <a href="#" class="list-group-item">Контакты</a>
+                    <router-link to="/" class="list-group-item" @click="menuStore.toggle()">Главная</router-link>
+                    <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Новости</a>
+                    <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Контакты</a>
                 </div>
                 <div class="list-group">
-                    <a href="#" class="list-group-item">Гарантия</a>
-                    <a href="#" class="list-group-item">Доставка</a>
+                    <router-link to="/garant" class="list-group-item" @click="menuStore.toggle()">Гарантия</router-link>
+                    <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Доставка</a>
                 </div>
                 </div>
             </div>
@@ -29,6 +29,11 @@
         </div>
     </div>
 </template>
+
+<script setup>
+import { useMenuStore } from '../stores/menuStore'
+const menuStore = useMenuStore()
+</script>
 <style scoped>
 .open-menu {
     width: 100%;
