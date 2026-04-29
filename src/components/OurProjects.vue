@@ -38,7 +38,7 @@
         </div>
       </div>
       <div class="wrap-catalog">
-        <button class="btn-catalog">Каталог</button>
+        <router-link to="/catalog" class="btn-catalog">Каталог</router-link>
       </div>
   </section>
 </template>
@@ -240,6 +240,10 @@ h2 {
     color: #fff;
     border: none;
     cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
 

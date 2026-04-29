@@ -9,7 +9,7 @@
                 </div>
                 <div class="wrap-list">
                     <div class="list-group">
-                    <router-link to="/" class="list-group-item" @click="menuStore.toggle()">Главная</router-link>
+                    <router-link to="/" class="list-group-item" @click="menuStore.toggle()">О компании</router-link>
                     <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Новости</a>
                     <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Контакты</a>
                 </div>

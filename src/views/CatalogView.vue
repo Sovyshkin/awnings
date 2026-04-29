@@ -1,7 +1,11 @@
 <template>
   <section class="catalog">
     <div class="wrap-title">
-      <span>Главная / Каталог</span>
+      <div class="breadcrumbs">
+        <router-link to="/">Главная</router-link>
+        <span>/</span>
+        <router-link to="/catalog">Каталог</router-link>
+      </div>
       <h1>Каталог</h1>
     </div>
     <div class="categories">
@@ -87,7 +91,25 @@ const filteredItems = computed(() => {
   gap: 34px;
 }
 
-.wrap-title span {
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.breadcrumbs a {
+  color: #000000;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.breadcrumbs a:hover {
+  color: #C96744;
+}
+
+.breadcrumbs span {
   color: #000000;
   font-size: 16px;
   font-weight: 600;
@@ -252,7 +274,8 @@ h1 {
     gap: 28px;
   }
 
-  .wrap-title span {
+  .breadcrumbs a,
+  .breadcrumbs span {
     font-size: 14px;
   }
 
@@ -302,7 +325,8 @@ h1 {
     gap: 24px;
   }
 
-  .wrap-title span {
+  .breadcrumbs a,
+  .breadcrumbs span {
     font-size: 14px;
   }
 
@@ -365,6 +389,11 @@ h1 {
     font-size: 28px;
   }
 
+  .breadcrumbs a,
+  .breadcrumbs span {
+    font-size: 13px;
+  }
+
   .categories {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -417,6 +446,11 @@ h1 {
 
   h1 {
     font-size: 24px;
+  }
+
+  .breadcrumbs a,
+  .breadcrumbs span {
+    font-size: 12px;
   }
 
   .categories {

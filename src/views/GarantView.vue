@@ -1,7 +1,11 @@
 <template>
   <section class="garant">
     <div class="garant-header">
-      <span>Главная / Гарантия</span>
+      <div class="breadcrumbs">
+        <router-link to="/">Главная</router-link>
+        <span>/</span>
+        <router-link to="/garant">Гарантия</router-link>
+      </div>
       <h1>Гарантия</h1>
     </div>
     <div class="garant-banner">
@@ -171,7 +175,25 @@ function toggleRedFaq(index) {
   gap: 34px;
 }
 
-.garant-header span {
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.breadcrumbs a {
+  color: #000000;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.breadcrumbs a:hover {
+  color: #C96744;
+}
+
+.breadcrumbs span {
   color: #000000;
   font-size: 16px;
   font-weight: 600;
@@ -457,7 +479,8 @@ h1 {
         gap: 28px;
     }
 
-    .garant-header span {
+    .breadcrumbs a,
+    .breadcrumbs span {
         font-size: 14px;
     }
 
@@ -546,7 +569,8 @@ h1 {
         gap: 24px;
     }
 
-    .garant-header span {
+    .breadcrumbs a,
+    .breadcrumbs span {
         font-size: 14px;
     }
 
@@ -653,6 +677,11 @@ h1 {
         font-size: 28px;
     }
 
+    .breadcrumbs a,
+    .breadcrumbs span {
+        font-size: 13px;
+    }
+
     .garant-banner {
         height: 240px;
         padding: 36px 24px;
@@ -735,6 +764,11 @@ h1 {
 
     .garant-header h1 {
         font-size: 24px;
+    }
+
+    .breadcrumbs a,
+    .breadcrumbs span {
+        font-size: 12px;
     }
 
     .garant-banner {

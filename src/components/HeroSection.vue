@@ -27,7 +27,7 @@
       </div>
       <div class="h2-block">
         <h2>Беседки для отдыха, мангальные зоны для встреч, навесы для авто для повседневного удобства.</h2>
-        <button class="btn-h2">Посмотреть комплектации <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
+        <router-link to="/catalog" class="btn-h2">Посмотреть комплектации <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></router-link>
       </div>
       
     </div>
@@ -164,6 +164,7 @@ h2 {
   font-size: 16px;
   border: none;
   cursor: pointer;
+  text-decoration: none;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
