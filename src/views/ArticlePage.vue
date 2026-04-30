@@ -161,7 +161,7 @@ function handleTouchEnd(e) {
       <div class="cards" ref="cardsWrapper" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
         <div class="card" v-for="article in otherArticles.slice(0, visibleCount)" :key="article.id" @click="goToArticle(article.id)">
           <div class="card-wrap-img">
-            <img :src="article.image" alt="">
+            <img src="../assets/company-card-1.png" alt="">
           </div>
           <div class="card-text">
             <span class="card-title">{{ article.title }}</span>
