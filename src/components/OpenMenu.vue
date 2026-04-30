@@ -10,12 +10,12 @@
                 <div class="wrap-list">
                     <div class="list-group">
                     <router-link to="/" class="list-group-item" @click="menuStore.toggle()">О компании</router-link>
-                    <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Новости</a>
-                    <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Контакты</a>
+                    <router-link to="/news-articles" class="list-group-item" @click="menuStore.toggle()">Новости</router-link>
+                    <router-link to="/contacts" class="list-group-item" @click="menuStore.toggle()">Контакты</router-link>
                 </div>
                 <div class="list-group">
                     <router-link to="/garant" class="list-group-item" @click="menuStore.toggle()">Гарантия</router-link>
-                    <a href="#" class="list-group-item" @click.prevent="menuStore.toggle()">Доставка</a>
+                    <router-link to="/delivery-and-payment" class="list-group-item" @click.prevent="menuStore.toggle()">Доставка</router-link>
                 </div>
                 </div>
             </div>

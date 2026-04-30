@@ -1,7 +1,7 @@
 <template>
   <section class="how-work">
     <div class="wrap-title">
-      <h2>Как мы работаем</h2>
+      <h2>Как происходит доставка</h2>
       <div class="actions">
         <button class="btn arrow-left" @click="prevStep">
           <img src="../assets/arrow-left.svg" alt="" />
@@ -24,10 +24,9 @@
       >
         <div class="card">
           <div class="card-text">
-            <span class="card-title">Оставьте заявку</span>
+            <span class="card-title">Оформление заказа</span>
             <p class="card-desc">
-              Заполните форму на сайте или позвоните — ответим в течение 30
-              минут
+              Выбираете товары и оставляете заявку
             </p>
           </div>
           <div class="wrap-icon">
@@ -36,9 +35,9 @@
         </div>
         <div class="card">
           <div class="card-text">
-            <span class="card-title">Получите расчёт</span>
+            <span class="card-title">Подтверждение</span>
             <p class="card-desc">
-              Менеджер уточнит размеры и комплектацию, пришлёт смету
+              Менеджер связывается для уточнения
             </p>
           </div>
           <div class="wrap-icon">
@@ -47,9 +46,9 @@
         </div>
         <div class="card">
           <div class="card-text">
-            <span class="card-title">Подпишите договор</span>
+            <span class="card-title">Производство</span>
             <p class="card-desc">
-              Фиксируем цену, сроки и состав работ документально
+              Изготавливаем изделие под ваш заказ
             </p>
           </div>
           <div class="wrap-icon">
@@ -58,9 +57,9 @@
         </div>
         <div class="card">
           <div class="card-text">
-            <span class="card-title">Установите awning</span>
+            <span class="card-title">Производство</span>
             <p class="card-desc">
-              Фиксируем цену, сроки и состав работ документально
+              Изготавливаем изделие под ваш заказ
             </p>
           </div>
           <div class="wrap-icon">
