@@ -178,7 +178,6 @@ function handleTouchEnd(e) {
           <img src="../assets/arrow-right.svg" alt="" />
         </button>
       </div>
-      <button class="btn-more" v-if="showMoreVisible" @click="showMore">Показать ещё</button>
     </div>
   </section>
 </template>
