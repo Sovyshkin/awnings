@@ -9,7 +9,7 @@
                 </div>
                 <div class="wrap-list">
                     <div class="list-group">
-                    <router-link to="/" class="list-group-item" @click="menuStore.toggle()">О компании</router-link>
+                    <router-link to="/about-company" class="list-group-item" @click="menuStore.toggle()">О компании</router-link>
                     <router-link to="/news-articles" class="list-group-item" @click="menuStore.toggle()">Новости</router-link>
                     <router-link to="/contacts" class="list-group-item" @click="menuStore.toggle()">Контакты</router-link>
                 </div>

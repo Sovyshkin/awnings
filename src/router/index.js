@@ -6,6 +6,7 @@ import DeliveryPayment from '../views/DeliveryPayment.vue'
 import NewsArticles from '../views/NewsArticles.vue'
 import ArticlePage from '../views/ArticlePage.vue'
 import ContactPage from '../views/ContactPage.vue'
+import AboutCompany from '../views/AboutCompany.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -17,6 +18,7 @@ const router = createRouter({
     { path: '/news-articles', name: 'news-articles', component: NewsArticles },
     { path: '/news-articles/:id', name: 'article', component: ArticlePage },
     { path: '/contacts', name: 'contacts', component: ContactPage },
+    { path: '/about-company', name: 'about-company', component: AboutCompany },
   ]
 })
 

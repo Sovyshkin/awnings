@@ -2,7 +2,6 @@
 
 <template>
     <section class="why-choose-us">
-<h1>Практичность, современный вид и продуманная функция.</h1>
         <div class="wrap-content">
             <div class="text">
                 <h2>Почему вы выбираете нас?</h2>
@@ -56,7 +55,6 @@
     display: flex;
     flex-direction: column;
     gap: 70px;
-    padding: 0 40px;
 }
 
 h1 {
@@ -174,7 +172,6 @@ h2 {
 @media (max-width: 1200px) {
     .why-choose-us {
         gap: 56px;
-        padding: 0 32px;
     }
 
     h1 {
@@ -208,7 +205,6 @@ h2 {
 @media (max-width: 1024px) {
     .why-choose-us {
         gap: 48px;
-        padding: 0 24px;
     }
 
     h1 {
@@ -246,7 +242,6 @@ h2 {
 @media (max-width: 768px) {
     .why-choose-us {
         gap: 40px;
-        padding: 0 16px;
     }
 
     h1 {
@@ -299,7 +294,6 @@ h2 {
 @media (max-width: 480px) {
     .why-choose-us {
         gap: 32px;
-        padding: 0 12px;
     }
 
     h1 {
