@@ -56,34 +56,90 @@
             <h2 class="form-title">Остались вопросы?</h2>
             <p class="form-subtitle">Оставьте заявку и наш менеджер свяжется с вами, что бы ответить на ваши вопросы!</p>
         </div>
-        <form action="">
+        <form @submit.prevent="submitForm">
             <div class="group-input">
-                <label for="">Ваше имя</label>
-                <input type="text" placeholder="Введите ваше имя">
+                <label for="form-name">Ваше имя</label>
+                <input type="text" id="form-name" v-model="formData.name" placeholder="Введите ваше имя" required>
             </div>
             <div class="group-input">
-                <label for="">Ваш телефон для связи</label>
-                <input type="text" placeholder="Введите ваше номер телефона">
+                <label for="form-phone">Ваш телефон для связи</label>
+                <input type="tel" id="form-phone" v-model="formData.phone" placeholder="Введите ваше номер телефона" required>
             </div>
             <div class="group-input">
-                <label for="">Ваш вопрос</label>
-                <input type="text" placeholder="Напишите интересующий вас вопрос">
+                <label for="form-message">Ваш вопрос</label>
+                <input type="text" id="form-message" v-model="formData.message" placeholder="Напишите интересующий вас вопрос">
             </div>
             <div class="group-check">
-                <input type="checkbox">
-                <label for="">Я даю согласие на обработку персональных данных</label>
+                <input type="checkbox" id="form-agree" v-model="formData.agree" required>
+                <label for="form-agree">Я даю согласие на обработку персональных данных</label>
             </div>
-            <button class="btn">Отправить</button>
+            <button type="submit" class="btn" :disabled="submitting">
+              {{ submitting ? 'Отправка...' : 'Отправить' }}
+            </button>
         </form>
+        <div v-if="formMessage" :class="['form-notice', formMessageType]">
+          {{ formMessage }}
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { submitLead } from '../services/api'
+
+const formData = ref({
+  name: '',
+  phone: '',
+  message: '',
+  agree: false
+})
+
+const submitting = ref(false)
+const formMessage = ref('')
+const formMessageType = ref('')
+
+const submitForm = async () => {
+  if (!formData.value.agree) {
+    formMessage.value = 'Необходимо согласиться на обработку персональных данных'
+    formMessageType.value = 'error'
+    return
+  }
+  
+  submitting.value = true
+  formMessage.value = ''
+  
+  try {
+    const response = await submitLead({
+      name: formData.value.name,
+      phone: formData.value.phone,
+      message: formData.value.message,
+      product_id: 0,
+      agree: true
+    })
+    
+    formMessage.value = response.message || 'Заявка успешно отправлена!'
+    formMessageType.value = 'success'
+    
+    // Reset form
+    formData.value = {
+      name: '',
+      phone: '',
+      message: '',
+      agree: false
+    }
+    
+  } catch (error) {
+    formMessage.value = error.message || 'Ошибка отправки заявки'
+    formMessageType.value = 'error'
+  } finally {
+    submitting.value = false
+  }
+}
 
 onMounted(() => {
+  // Initialize Yandex Maps
   const script = document.createElement('script')
   script.src = 'https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU'
   script.type = 'text/javascript'
@@ -384,8 +440,30 @@ form {
     transition: all 0.3s ease;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
     background-color: #B35A3A;
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.form-notice {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.form-notice.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.form-notice.error {
+    background: #f8d7da;
+    color: #721c24;
 }
 
 @media (max-width: 1024px) {
