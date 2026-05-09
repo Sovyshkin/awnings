@@ -2,14 +2,50 @@
     <section class="our-works">
         <h1>Наши работы</h1>
         <div class="cards">
-          <div class="card" v-for="i in 9" :key="i" @click="goToArticle(i)">
+          <div class="card" v-for="(project, index) in projects" :key="index" @click="goToArticle(index + 1)">
             <div class="wrap-img">
-              <img src="../assets/company-card-1.png" alt="">
+              <img :src="project.image || defaultImage" alt="">
             </div>
           </div>
         </div>
     </section>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+import defaultImage from '../assets/company-card-1.png'
+
+const projects = ref(Array(9).fill(null).map(() => ({ image: '' })))
+
+function goToArticle(index) {
+  // Можно добавить навигацию
+  console.log('Go to article', index)
+}
+
+async function loadProjects() {
+  const blocks = await fetchContentBlocks('home')
+  const projectsBlock = blocks.find(b => b.block_type === 'gallery' && b.block_name === 'Наши проекты')
+  if (projectsBlock && projectsBlock.block_data) {
+    let data = projectsBlock.block_data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        return
+      }
+    }
+    if (Array.isArray(data) && data.length > 0) {
+      projects.value = data.slice(0, 9) // максимум 9 проектов
+    }
+  }
+}
+
+onMounted(() => {
+  loadProjects()
+})
+</script>
+
 <style scoped>
 .our-works {
   display: flex;
@@ -59,36 +95,27 @@
     background: #00000060;
 }
 
-.card:hover .wrap-img {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-}
-
 .wrap-img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
-    position: relative;
-    z-index: 0;
 }
 
-.our-works h1 {
-    font-size: 44px;
-    font-weight: 400;
-    color: #000000;
+.card:hover .wrap-img {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 @media (max-width: 1200px) {
-    .our-works h1 {
-        font-size: 40px;
+    .our-works {
+        gap: 64px;
     }
 
     .cards {
-        gap: 16px;
+        row-gap: 40px;
     }
 
     .card {
-        width: calc(33.333% - 16px);
+        width: calc(33.333% - 14px);
     }
 
     .wrap-img {
@@ -97,18 +124,35 @@
 }
 
 @media (max-width: 1024px) {
-    .our-works h1 {
-        font-size: 36px;
+    .our-works {
+        gap: 56px;
     }
 
     .cards {
-        row-gap: 40px;
-        column-gap: 12px;
+        row-gap: 32px;
+        column-gap: 16px;
     }
 
     .card {
         width: calc(33.333% - 12px);
-        gap: 20px;
+    }
+
+    .wrap-img {
+        height: 220px;
+    }
+}
+
+@media (max-width: 768px) {
+    .our-works {
+        gap: 48px;
+    }
+
+    .cards {
+        row-gap: 24px;
+    }
+
+    .card {
+        width: calc(50% - 8px);
     }
 
     .wrap-img {
@@ -116,51 +160,22 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
     .our-works {
         gap: 40px;
     }
 
-    .our-works h1 {
-        font-size: 28px;
-    }
-
     .cards {
-        row-gap: 12px;
+        row-gap: 20px;
         column-gap: 12px;
     }
 
     .card {
         width: calc(50% - 6px);
-        gap: 12px;
     }
 
     .wrap-img {
-        height: 180px;
-    }
-}
-
-@media (max-width: 480px) {
-    .our-works {
-        gap: 32px;
-    }
-
-    .our-works h1 {
-        font-size: 24px;
-    }
-
-    .cards {
-        row-gap: 10px;
-        column-gap: 10px;
-    }
-
-    .card {
-        width: 100%;
-        gap: 10px;
-    }
-
-    .wrap-img {
-        height: 180px;
+        height: 160px;
     }
 }
 </style>

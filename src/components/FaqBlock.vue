@@ -22,48 +22,59 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
 
 const openIndex = ref(null)
 
-const faqItems = [
+const faqItems = ref([
     {
         question: 'Какие конструкции Вы изготавливаете?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
+        answer: 'Мы изготавливаем навесы, беседки, мангальные зоны и террасы из металла с различными типами кровли.'
     },
     {
         question: 'Подходят ли конструкции для круглогодичного использования?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
+        answer: 'Да, все наши конструкции рассчитаны на эксплуатацию в любое время года.'
     },
     {
         question: 'Можно ли выбрать размер конструкции?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
+        answer: 'Да, мы изготавливаем конструкции по индивидуальным размерам под ваши задачи.'
     },
     {
         question: 'Можно ли заказать мангальную зону как отдельное решение?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
+        answer: 'Да, мангальные зоны доступны как отдельные конструкции.'
     },
     {
         question: 'Из каких материалов изготавливаются конструкции?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
+        answer: 'Каркас из стального профиля, кровля из поликарбоната или металлочерепицы.'
     },
-    {
-        question: 'Как понять, какой вариант подойдёт именно мне?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
-    },
-    {
-        question: 'Можно ли выбрать цвет и отделку?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
-    },
-    {
-        question: 'Сколько времени занимает изготовление?',
-        answer: 'Figma ipsum component variant main layer. Font team duplicate edit line. Frame thumbnail group stroke team. Create frame mask team list blur text font subtract arrange. Export library selection vertical rectangle. Share subtract project text bold library. Vertical figjam image rotate variant style star. Bullet line hand move prototype device object auto. Rectangle ellipse create align pen distribute variant mask scrolling. Scrolling selection project clip draft. Horizontal rectangle team pencil team.'
+])
+
+async function loadFaqData() {
+    const blocks = await fetchContentBlocks('faq')
+    const faqBlock = blocks.find(b => b.block_type === 'faq')
+    if (faqBlock && faqBlock.block_data) {
+        let data = faqBlock.block_data
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data)
+            } catch (e) {
+                return
+            }
+        }
+        if (Array.isArray(data) && data.length > 0) {
+            faqItems.value = data
+        }
     }
-]
+}
 
 function toggleFaq(index) {
     openIndex.value = openIndex.value === index ? null : index
 }
+
+onMounted(() => {
+    loadFaqData()
+})
 </script>
 
 <style scoped>

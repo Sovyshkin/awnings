@@ -9,48 +9,69 @@
                 <p>Быстрые сроки и высокое качество работы, а так же конфигуратор моделей под любой бюджет</p>
             </div>
             <div class="cards">
-                <div class="card">
+                <div v-for="(card, index) in whyUsCards" :key="index" class="card">
                     <div class="wrap-img">
-                        <img src="../assets/why-us-1.svg" alt="">
+                        <img :src="getIconPath(card.icon)" alt="">
                     </div>
                     <div class="card-text">
-                        <span class="card-title">Гарантия до 15 лет</span>
-                        <p class="card-desc">Даём письменную гарантию на конструкцию и монтаж
-</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="wrap-img">
-                        <img src="../assets/why-us-2.svg" alt="">
-                    </div>
-                    <div class="card-text">
-                        <span class="card-title">Доставка по России</span>
-                        <p class="card-desc">Отправим в любой регион — транспортной компанией или своим транспортом</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="wrap-img">
-                        <img src="../assets/why-us-3.svg" alt="">
-                    </div>
-                    <div class="card-text">
-                        <span class="card-title">Монтаж под ключ</span>
-                        <p class="card-desc">Наша бригада установит навес за 1–2 дня без вашего участия
-</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="wrap-img">
-                        <img src="../assets/why-us-4.svg" alt="">
-                    </div>
-                    <div class="card-text">
-                        <span class="card-title">Консультация бесплатно</span>
-                        <p class="card-desc">Позвоните или оставьте заявку — подберём модель под ваши задачи</p>
+                        <span class="card-title">{{ card.title }}</span>
+                        <p class="card-desc">{{ card.text }}</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+import whyUs1 from '../assets/why-us-1.svg'
+import whyUs2 from '../assets/why-us-2.svg'
+import whyUs3 from '../assets/why-us-3.svg'
+import whyUs4 from '../assets/why-us-4.svg'
+
+const whyUsCards = ref([])
+
+const iconMap = {
+  'why-us-1': whyUs1,
+  'why-us-2': whyUs2,
+  'why-us-3': whyUs3,
+  'why-us-4': whyUs4,
+  'why-us-1.svg': whyUs1,
+  'why-us-2.svg': whyUs2,
+  'why-us-3.svg': whyUs3,
+  'why-us-4.svg': whyUs4,
+  'card-icon-1': whyUs1,
+  'card-icon-2': whyUs2,
+  'card-icon-3': whyUs3,
+  'card-icon-4': whyUs4
+}
+
+function getIconPath(iconName) {
+  return iconMap[iconName] || whyUs1
+}
+
+async function loadWhyUsData() {
+  const blocks = await fetchContentBlocks('home')
+  const whyUsBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Почему выбирают нас')
+  if (whyUsBlock && whyUsBlock.block_data) {
+    let data = whyUsBlock.block_data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        return
+      }
+    }
+    whyUsCards.value = data
+  }
+}
+
+onMounted(() => {
+  loadWhyUsData()
+})
+</script>
 <style scoped>
 .why-choose-us {
     display: flex;

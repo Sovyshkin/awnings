@@ -2,49 +2,139 @@
     <footer class="footer">
         <div class="footer-main">
             <div class="footer-name">
-                <h2>Название</h2>
-                <p>Производство и продажа металлических навесов в Екатеринбурге и Свердловской области. Доставка и монтаж по всей России.</p>
+                <h2>{{ footerTitle || 'Название' }}</h2>
+                <p>{{ footerDescription || 'Производство и продажа металлических навесов в Екатеринбурге и Свердловской области. Доставка и монтаж по всей России.' }}</p>
             </div>
             <div class="footer-nav">
                 <div class="catalog">
-                    <h3>
-                        Каталог
-                    </h3>
+                    <h3>Каталог</h3>
                     <ul class="list-nav">
-                        <li class="item-nav">Беседки</li>
-                        <li class="item-nav">Мангальные зоны</li>
-                        <li class="item-nav">Навесы для авто</li>
+                        <li v-for="(item, index) in catalogLinks" :key="index" class="item-nav">{{ item.text }}</li>
                     </ul>
                 </div>
                 <div class="client">
                     <h3>Покупателям</h3>
                     <ul class="list-nav">
-                        <li class="item-nav">О компании</li>
-                        <li class="item-nav">Новости и статьи</li>
-                        <li class="item-nav">Доставка и оплата</li>
-                        <li class="item-nav">Гарантия</li>
-                        <li class="item-nav">Контакты</li>
+                        <li v-for="(item, index) in clientLinks" :key="index" class="item-nav">{{ item.text }}</li>
                     </ul>
                 </div>
                 <div class="contact">
                     <h3>Контакты</h3>
                     <ul class="list-nav">
-                        <li class="item-nav">+7 (900) 123-45-67</li>
-                        <li class="item-nav">info@navesstroy.ru</li>
-                        <li class="item-nav">г. Екатеринбург, ул. Промышленная, д. 4, стр. 2</li>
+                        <li class="item-nav">{{ footerPhone || '+7 (900) 123-45-67' }}</li>
+                        <li class="item-nav">{{ footerEmail || 'info@navesstroy.ru' }}</li>
+                        <li class="item-nav">{{ footerAddress || 'г. Екатеринбург, ул. Промышленная, д. 4, стр. 2' }}</li>
                     </ul>
                 </div>
             </div>
         </div>
         <div class="footer-sub">
-            <span class="copy">© 2026 Название. Все права защищены.</span>
+            <span class="copy">{{ footerCopyright || '© 2026 Название. Все права защищены.' }}</span>
             <div class="docs">
-                <span>Политика конфиденциальности</span>
-                <span>Пользовательское соглашение</span>
+                <span>{{ footerPrivacy || 'Политика конфиденциальности' }}</span>
+                <span>{{ footerAgreement || 'Пользовательское соглашение' }}</span>
             </div>
         </div>
     </footer>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+
+const footerTitle = ref('')
+const footerDescription = ref('')
+const footerCopyright = ref('')
+const footerPrivacy = ref('')
+const footerAgreement = ref('')
+const footerPhone = ref('')
+const footerEmail = ref('')
+const footerAddress = ref('')
+const catalogLinks = ref([
+    { text: 'Беседки' },
+    { text: 'Мангальные зоны' },
+    { text: 'Навесы для авто' },
+])
+const clientLinks = ref([
+    { text: 'О компании' },
+    { text: 'Новости и статьи' },
+    { text: 'Доставка и оплата' },
+    { text: 'Гарантия' },
+    { text: 'Контакты' },
+])
+
+async function loadFooterData() {
+    const blocks = await fetchContentBlocks('footer')
+    
+    const mainBlock = blocks.find(b => b.block_name.includes('Основная информация'))
+    if (mainBlock) {
+        footerTitle.value = mainBlock.block_title || ''
+        footerDescription.value = mainBlock.block_text || ''
+        if (mainBlock.block_data) {
+            let data = mainBlock.block_data
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data)
+                } catch (e) {
+                    data = {}
+                }
+            }
+            footerCopyright.value = data.copyright || ''
+            footerPrivacy.value = data.privacy || ''
+            footerAgreement.value = data.agreement || ''
+        }
+    }
+    
+    const catalogBlock = blocks.find(b => b.block_name.includes('Каталог'))
+    if (catalogBlock && catalogBlock.block_data) {
+        let data = catalogBlock.block_data
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data)
+            } catch (e) {
+                return
+            }
+        }
+        if (Array.isArray(data)) {
+            catalogLinks.value = data
+        }
+    }
+    
+    const clientBlock = blocks.find(b => b.block_name.includes('Покупателям'))
+    if (clientBlock && clientBlock.block_data) {
+        let data = clientBlock.block_data
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data)
+            } catch (e) {
+                return
+            }
+        }
+        if (Array.isArray(data)) {
+            clientLinks.value = data
+        }
+    }
+    
+    const contactBlock = blocks.find(b => b.block_name.includes('Контакты'))
+    if (contactBlock && contactBlock.block_data) {
+        let data = contactBlock.block_data
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data)
+            } catch (e) {
+                return
+            }
+        }
+        footerPhone.value = data.phone || ''
+        footerEmail.value = data.email || ''
+        footerAddress.value = data.address || ''
+    }
+}
+
+onMounted(() => {
+    loadFooterData()
+})
+</script>
 <style scoped>
 .footer {
     width: 100%;

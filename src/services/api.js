@@ -105,6 +105,22 @@ export async function submitLead(data) {
   }
 }
 
+// Fetch content blocks from WordPress
+export async function fetchContentBlocks(page = 'home') {
+  try {
+    const response = await fetch(`${WP_API_URL}/content-blocks/page/${encodeURIComponent(page)}`)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching content blocks:', error)
+    return []
+  }
+}
+
 // Export API URL for direct use
 export { WP_API_URL }
 
@@ -113,5 +129,6 @@ export default {
   fetchProduct,
   fetchCategories,
   submitLead,
+  fetchContentBlocks,
   WP_API_URL
 }

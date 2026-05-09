@@ -1,38 +1,108 @@
 <template>
   <section class="hero-section">
-    <h1 class="title">Современные модульные решения для участка в едином стиле</h1>
+    <h1 class="title">{{ heroData.block_title || 'Современные модульные решения для участка в едином стиле' }}</h1>
     <div class="main-content">
       <div class="list-group">
-        <div class="group">
-          <img class="group-img" src="../assets/group-1.svg" alt="">
+        <div v-for="(feature, index) in heroFeatures" :key="index" class="group">
+          <img class="group-img" :src="getIconPath(feature.icon)" :alt="feature.title">
           <div class="group-content">
-            <span>Единый стиль участка</span>
-            <p>Все решения визуально сочетаются между собой.</p>
-          </div>
-        </div>
-        <div class="group">
-          <img class="group-img" src="../assets/group-2.svg" alt="">
-          <div class="group-content">
-            <span>Продуманная конструкция</span>
-            <p>Надёжный каркас, современные материалы, чистая геометрия.</p>
-          </div>
-        </div>
-        <div class="group">
-          <img class="group-img" src="../assets/group-3.svg" alt="">
-          <div class="group-content">
-            <span>Готовые комплектации</span>
-            <p>Понятный выбор без лишней сложности.</p>
+            <span>{{ feature.title }}</span>
+            <p>{{ feature.text }}</p>
           </div>
         </div>
       </div>
       <div class="h2-block">
-        <h2>Беседки для отдыха, мангальные зоны для встреч, навесы для авто для повседневного удобства.</h2>
-        <router-link to="/catalog" class="btn-h2">Посмотреть комплектации <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></router-link>
+        <h2>{{ heroData.block_text || 'Беседки для отдыха, мангальные зоны для встреч, навесы для авто для повседневного удобства.' }}</h2>
+        <router-link :to="heroButtonLink" class="btn-h2">{{ heroButtonText }} <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></router-link>
       </div>
       
     </div>
   </section>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+import group1 from '../assets/group-1.svg'
+import group2 from '../assets/group-2.svg'
+import group3 from '../assets/group-3.svg'
+
+const heroData = ref({
+  block_title: '',
+  block_text: '',
+  block_data: null
+})
+
+const iconMap = {
+  'group-1': group1,
+  'group-2': group2,
+  'group-3': group3,
+  'group-1.svg': group1,
+  'group-2.svg': group2,
+  'group-3.svg': group3
+}
+
+const heroFeatures = computed(() => {
+  if (heroData.value.block_data) {
+    let data = heroData.value.block_data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        return []
+      }
+    }
+    return data.features || data || []
+  }
+  return []
+})
+
+const heroButtonText = computed(() => {
+  if (heroData.value.block_data) {
+    let data = heroData.value.block_data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        return 'Посмотреть комплектации'
+      }
+    }
+    return data.button_text || 'Посмотреть комплектации'
+  }
+  return 'Посмотреть комплектации'
+})
+
+const heroButtonLink = computed(() => {
+  if (heroData.value.block_data) {
+    let data = heroData.value.block_data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        return '/catalog'
+      }
+    }
+    return data.button_link || '/catalog'
+  }
+  return '/catalog'
+})
+
+function getIconPath(iconName) {
+  return iconMap[iconName] || group1
+}
+
+async function loadHeroData() {
+  const blocks = await fetchContentBlocks('home')
+  const heroBlock = blocks.find(b => b.block_type === 'hero')
+  if (heroBlock) {
+    heroData.value = heroBlock
+  }
+}
+
+onMounted(() => {
+  loadHeroData()
+})
+</script>
 <style scoped>
 .hero-section {
   position: relative;

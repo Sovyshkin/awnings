@@ -1,44 +1,60 @@
 <template>
   <section class="what-we-doing">
-    <h1>
-      Беседки, навесы и мангальные зоны для тех, кто ценит удобство и
-      современный внешний вид
-    </h1>
+    <h1>{{ sectionTitle || 'Беседки, навесы и мангальные зоны для тех, кто ценит удобство и современный внешний вид' }}</h1>
       <h2>Что мы делаем</h2>
       <div class="cards">
-        <div class="card">
+        <div v-for="(card, index) in cards" :key="index" class="card">
           <div class="wrap-img">
-            <img src="../assets/card.png" alt="" />
+            <img :src="card.image || cardImage" :alt="card.title" />
           </div>
           <div class="category">
             <div class="circle"></div>
-            <span class="text-category">Сад</span>
+            <span class="text-category">{{ card.category }}</span>
           </div>
-          <span class="card-title">Беседка для отдыха</span>
-        </div>
-        <div class="card">
-          <div class="wrap-img">
-            <img src="../assets/card.png" alt="" />
-          </div>
-          <div class="category">
-            <div class="circle"></div>
-            <span class="text-category">Барбекю</span>
-          </div>
-          <span class="card-title">Мангальные зоны</span>
-        </div>
-        <div class="card">
-          <div class="wrap-img">
-            <img src="../assets/card.png" alt="" />
-          </div>
-          <div class="category">
-            <div class="circle"></div>
-            <span class="text-category">Авто</span>
-          </div>
-          <span class="card-title">Навесы для автомобилей</span>
+          <span class="card-title">{{ card.title }}</span>
         </div>
       </div>
   </section>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+import cardImage from '../assets/card.png'
+
+const sectionTitle = ref('')
+const cards = ref([
+  { title: 'Беседка для отдыха', category: 'Сад', image: '' },
+  { title: 'Мангальные зоны', category: 'Барбекю', image: '' },
+  { title: 'Навесы для автомобилей', category: 'Авто', image: '' }
+])
+
+async function loadWhatDoingData() {
+  const blocks = await fetchContentBlocks('home')
+  const whatDoingBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Что мы делаем')
+  if (whatDoingBlock) {
+    sectionTitle.value = whatDoingBlock.block_title || ''
+    if (whatDoingBlock.block_data) {
+      let data = whatDoingBlock.block_data
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data)
+        } catch (e) {
+          return
+        }
+      }
+      if (Array.isArray(data) && data.length > 0) {
+        cards.value = data
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  loadWhatDoingData()
+})
+</script>
+
 <style scoped>
 .what-we-doing {
     display: flex;
@@ -98,47 +114,31 @@ h2 {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.card:hover .wrap-img img {
-    transform: scale(1.05);
 }
 
 .category {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 8px;
 }
 
 .circle {
-    background-color: #000000;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.card:hover .circle {
-    transform: scale(1.3);
+    width: 8px;
+    height: 8px;
     background-color: #C96744;
+    border-radius: 50%;
 }
 
 .text-category {
-    color: #BCBCBC;
-    font-size: 16px;
+    color: #C96744;
+    font-size: 14px;
     font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.card:hover .text-category {
-    color: #000000;
 }
 
 .card-title {
+    font-size: 28px;
+    font-weight: 500;
     color: #000000;
-    font-size: 24px;
-    font-weight: 400;
     transition: color 0.3s ease;
 }
 
@@ -166,7 +166,7 @@ h2 {
     }
 
     .card-title {
-        font-size: 20px;
+        font-size: 24px;
     }
 }
 
@@ -193,16 +193,8 @@ h2 {
         height: 280px;
     }
 
-    .card {
-        gap: 16px;
-    }
-
-    .text-category {
-        font-size: 14px;
-    }
-
     .card-title {
-        font-size: 18px;
+        font-size: 20px;
     }
 }
 
@@ -227,26 +219,11 @@ h2 {
     }
 
     .wrap-img {
-        height: 240px;
-    }
-
-    .card {
-        flex-direction: row;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .card:hover {
-        transform: translateX(8px);
-    }
-
-    .card > .wrap-img {
-        width: 40%;
-        height: 160px;
+        height: 320px;
     }
 
     .card-title {
-        font-size: 16px;
+        font-size: 18px;
     }
 }
 
@@ -265,25 +242,15 @@ h2 {
     }
 
     .wrap-img {
-        height: 200px;
+        height: 240px;
     }
 
-    .card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .card > .wrap-img {
-        width: 100%;
-        height: 200px;
+    .card-title {
+        font-size: 16px;
     }
 
     .text-category {
         font-size: 12px;
-    }
-
-    .card-title {
-        font-size: 14px;
     }
 }
 </style>

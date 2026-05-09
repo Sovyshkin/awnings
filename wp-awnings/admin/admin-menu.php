@@ -69,6 +69,17 @@ function wp_awnings_admin_menu() {
         'dashicons-email-alt',
         31
     );
+    
+    // Content management menu
+    add_menu_page(
+        'Контент',
+        'Контент',
+        'manage_options',
+        'wp-awnings-content',
+        'wp_awnings_content_page',
+        'dashicons-admin-page',
+        32
+    );
 }
 add_action('admin_menu', 'wp_awnings_admin_menu');
 
@@ -85,6 +96,11 @@ function wp_awnings_categories_page() {
 // Leads page callback
 function wp_awnings_leads_page() {
     include WP_AWNINGS_PATH . '/admin/leads-admin.php';
+}
+
+// Content page callback
+function wp_awnings_content_page() {
+    include WP_AWNINGS_PATH . '/admin/content-admin.php';
 }
 
 // Add CSS for leads badge

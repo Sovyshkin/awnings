@@ -2,26 +2,19 @@
     <div class="open-menu">
         <div class="content">
             <div class="nav-menu">
-                <div class="list-group">
-                    <router-link to="/catalog?category=besedka" class="list-group-item" @click="menuStore.toggle()">Беседки</router-link>
-                    <router-link to="/catalog?category=mangal" class="list-group-item" @click="menuStore.toggle()">Мангальные зоны</router-link>
-                    <router-link to="/catalog?category=naves" class="list-group-item" @click="menuStore.toggle()">Навесы для авто</router-link>
-                </div>
-                <div class="wrap-list">
-                    <div class="list-group">
-                    <router-link to="/about-company" class="list-group-item" @click="menuStore.toggle()">О компании</router-link>
-                    <router-link to="/news-articles" class="list-group-item" @click="menuStore.toggle()">Новости</router-link>
-                    <router-link to="/contacts" class="list-group-item" @click="menuStore.toggle()">Контакты</router-link>
-                </div>
-                <div class="list-group">
-                    <router-link to="/garant" class="list-group-item" @click="menuStore.toggle()">Гарантия</router-link>
-                    <router-link to="/delivery-and-payment" class="list-group-item" @click.prevent="menuStore.toggle()">Доставка</router-link>
-                </div>
+                <div v-for="(group, gIndex) in menuGroups" :key="gIndex" class="list-group">
+                    <router-link 
+                        v-for="(item, iIndex) in group" 
+                        :key="iIndex" 
+                        :to="item.link" 
+                        class="list-group-item" 
+                        @click="menuStore.toggle()"
+                    >{{ item.text }}</router-link>
                 </div>
             </div>
             <div class="menu-footer">
-                <span>г. Екатеринбург, ул. Промышленная, д. 4, стр. 2</span>
-                <span>+7 (900) 123-45-67</span>
+                <span>{{ footerAddress || 'г. Екатеринбург, ул. Промышленная, д. 4, стр. 2' }}</span>
+                <span>{{ footerPhone || '+7 (900) 123-45-67' }}</span>
             </div>
         </div>
         <div class="wrap-img">
@@ -31,8 +24,68 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useMenuStore } from '../stores/menuStore'
+import { fetchContentBlocks } from '../services/api'
+
 const menuStore = useMenuStore()
+
+const menuGroups = ref([
+    [
+        { text: 'Беседки', link: '/catalog?category=besedka' },
+        { text: 'Мангальные зоны', link: '/catalog?category=mangal' },
+        { text: 'Навесы для авто', link: '/catalog?category=naves' },
+    ],
+    [
+        { text: 'О компании', link: '/about-company' },
+        { text: 'Новости', link: '/news-articles' },
+        { text: 'Контакты', link: '/contacts' },
+    ],
+    [
+        { text: 'Гарантия', link: '/garant' },
+        { text: 'Доставка', link: '/delivery-and-payment' },
+    ]
+])
+
+const footerAddress = ref('')
+const footerPhone = ref('')
+
+async function loadMenuData() {
+    const blocks = await fetchContentBlocks('header')
+    const menuBlock = blocks.find(b => b.block_type === 'header' && b.block_name.includes('Меню'))
+    if (menuBlock && menuBlock.block_data) {
+        let data = menuBlock.block_data
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data)
+            } catch (e) {
+                return
+            }
+        }
+        if (Array.isArray(data)) {
+            menuGroups.value = data
+        }
+    }
+    
+    const footerBlocks = await fetchContentBlocks('footer')
+    const contactBlock = footerBlocks.find(b => b.block_type === 'footer' && b.block_name.includes('Контакты'))
+    if (contactBlock && contactBlock.block_data) {
+        let data = contactBlock.block_data
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data)
+            } catch (e) {
+                return
+            }
+        }
+        footerAddress.value = data.address || ''
+        footerPhone.value = data.phone || ''
+    }
+}
+
+onMounted(() => {
+    loadMenuData()
+})
 </script>
 <style scoped>
 .open-menu {
