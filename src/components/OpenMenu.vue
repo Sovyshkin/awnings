@@ -18,7 +18,7 @@
             </div>
         </div>
         <div class="wrap-img">
-            <img src="../assets/company-card-1.png" alt="">
+            <img :src="menuImage" alt="">
         </div>
     </div>
 </template>
@@ -30,56 +30,47 @@ import { fetchContentBlocks } from '../services/api'
 
 const menuStore = useMenuStore()
 
-const menuGroups = ref([
+const menuGroups = [
     [
         { text: 'Беседки', link: '/catalog?category=besedka' },
         { text: 'Мангальные зоны', link: '/catalog?category=mangal' },
         { text: 'Навесы для авто', link: '/catalog?category=naves' },
     ],
     [
+        { text: "Главная", link: '/' },
         { text: 'О компании', link: '/about-company' },
         { text: 'Новости', link: '/news-articles' },
-        { text: 'Контакты', link: '/contacts' },
     ],
     [
+        { text: 'Контакты', link: '/contacts' },
         { text: 'Гарантия', link: '/garant' },
         { text: 'Доставка', link: '/delivery-and-payment' },
     ]
-])
+]
 
-const footerAddress = ref('')
-const footerPhone = ref('')
+const footerAddress = ref('г. Екатеринбург, ул. Промышленная, д. 4, стр. 2')
+const footerPhone = ref('+7 (900) 123-45-67')
+const menuImage = ref('../assets/company-card-1.png')
 
 async function loadMenuData() {
     const blocks = await fetchContentBlocks('header')
-    const menuBlock = blocks.find(b => b.block_type === 'header' && b.block_name.includes('Меню'))
+    const menuBlock = blocks.find(b => b.block_name === 'Шапка - Меню' || b.block_name === 'Меню')
     if (menuBlock && menuBlock.block_data) {
         let data = menuBlock.block_data
         if (typeof data === 'string') {
             try {
                 data = JSON.parse(data)
-            } catch (e) {
-                return
+            } catch (e) {}
+        }
+        if (data.address) footerAddress.value = data.address
+        if (data.phone) footerPhone.value = data.phone
+        if (data.image) {
+            if (data.image.startsWith('http')) {
+                menuImage.value = data.image
+            } else {
+                menuImage.value = `/wp-content/themes/wp-awnings/assets/${data.image.split('/').pop()}`
             }
         }
-        if (Array.isArray(data)) {
-            menuGroups.value = data
-        }
-    }
-    
-    const footerBlocks = await fetchContentBlocks('footer')
-    const contactBlock = footerBlocks.find(b => b.block_type === 'footer' && b.block_name.includes('Контакты'))
-    if (contactBlock && contactBlock.block_data) {
-        let data = contactBlock.block_data
-        if (typeof data === 'string') {
-            try {
-                data = JSON.parse(data)
-            } catch (e) {
-                return
-            }
-        }
-        footerAddress.value = data.address || ''
-        footerPhone.value = data.phone || ''
     }
 }
 

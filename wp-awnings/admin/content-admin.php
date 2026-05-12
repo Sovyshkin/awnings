@@ -505,6 +505,32 @@ foreach ($pages as $page_key => $page_name) {
             previewHTML += '</div>';
         }
         
+        // Check if this is a features block with images that needs visual editor
+        let dataEditorHTML = '';
+        if (block.block_type === 'features' && blockData && Array.isArray(blockData) && blockData.length > 0 && blockData[0].image !== undefined) {
+            // Visual editor for features with images (like "Что мы делаем")
+            dataEditorHTML = renderFeaturesWithImagesEditor(block, blockData);
+        } else if (block.block_type === 'header' && blockData && typeof blockData === 'object' && !Array.isArray(blockData)) {
+            // Visual editor for header blocks with address, phone, image
+            dataEditorHTML = renderHeaderBlockEditor(block, blockData);
+        } else {
+            // Standard JSON editor
+            dataEditorHTML = '<div class="wpa-form-group"><label>JSON данные блока (редактируйте внимательно!)</label><textarea id="data-' + block.id + '" style="min-height: 200px; font-family: monospace; font-size: 12px;">' + escapeHtml(JSON.stringify(blockData || {}, null, 2)) + '</textarea></div>';
+        }
+        
+        let blockImageSection = '';
+        if (block.block_type !== 'gallery' && block.block_type !== 'faq' && block.block_type !== 'footer' && block.block_type !== 'header') {
+            blockImageSection = '<div class="wpa-form-group"><label>Изображение</label>' +
+                '<div class="wpa-image-upload-wrapper" style="display: flex; flex-direction: column; gap: 12px;">' +
+                '<div style="display: flex; align-items: center; gap: 16px;">' +
+                (block.block_image ? '<img class="wpa-image-preview" src="' + escapeHtml(block.block_image) + '" alt="">' : '<div class="wpa-image-placeholder">Нет изображения</div>') +
+                '<button type="button" class="wpa-upload-image-btn button" data-target="image-' + block.id + '" style="padding: 8px 16px;">Выбрать изображение</button>' +
+                '<button type="button" class="wpa-remove-image-btn button" data-target="image-' + block.id + '" style="padding: 8px 16px; color: #dc3232;">Удалить</button>' +
+                '</div>' +
+                '<input type="text" id="image-' + block.id + '" value="' + escapeHtml(block.block_image || '') + '" placeholder="Или введите URL вручную" style="flex: 1;">' +
+                '</div></div>';
+        }
+        
         return '<div class="wpa-block-card" data-id="' + block.id + '">' +
             '<div class="wpa-block-header">' +
             '<div class="wpa-block-info"><h3>' + escapeHtml(block.block_name || 'Блок без названия') + '</h3><p>' + (blockTypeLabels[block.block_type] || block.block_type) + '</p></div>' +
@@ -517,21 +543,8 @@ foreach ($pages as $page_key => $page_name) {
             '<div class="wpa-form-group"><label>Название блока</label><input type="text" id="name-' + block.id + '" value="' + escapeHtml(block.block_name || '') + '"></div>' +
             '<div class="wpa-form-group"><label>Заголовок (title)</label><input type="text" id="title-' + block.id + '" value="' + escapeHtml(block.block_title || '') + '"></div>' +
             '<div class="wpa-form-group"><label>Текст</label><textarea id="text-' + block.id + '">' + escapeHtml(block.block_text || '') + '</textarea></div>' +
-            '<div class="wpa-form-group"><label>Изображение</label>' +
-            '<div class="wpa-image-upload-wrapper" style="display: flex; flex-direction: column; gap: 12px;">' +
-            '<div style="display: flex; align-items: center; gap: 16px;">' +
-            (block.block_image ? '<img class="wpa-image-preview" src="' + escapeHtml(block.block_image) + '" alt="">' : '<div class="wpa-image-placeholder">Нет изображения</div>') +
-            '<button type="button" class="wpa-upload-image-btn button" data-target="image-' + block.id + '" style="padding: 8px 16px;">Выбрать изображение</button>' +
-            '<button type="button" class="wpa-remove-image-btn button" data-target="image-' + block.id + '" style="padding: 8px 16px; color: #dc3232;">Удалить</button>' +
-            '</div>' +
-            '<input type="text" id="image-' + block.id + '" value="' + escapeHtml(block.block_image || '') + '" placeholder="Или введите URL вручную" style="flex: 1;">' +
-            '</div></div>' +
-            '<div class="wpa-form-group"><label>JSON данные блока (редактируйте внимательно!)</label><textarea id="data-' + block.id + '" style="min-height: 200px; font-family: monospace; font-size: 12px;">' + escapeHtml(JSON.stringify(blockData || {}, null, 2)) + '</textarea></div>' +
-            '<div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #646970;">' +
-            '<strong>Структура JSON для разных блоков:</strong><br>' +
-            'Массив элементов: [{"title": "...", "text": "..."}]<br>' +
-            'Контакты: {"phone": "...", "email": "..."}' +
-            '</div>' +
+            blockImageSection +
+            dataEditorHTML +
             '<div class="wpa-form-actions"><button class="wpa-form-btn save" data-save="' + block.id + '">Сохранить</button><button class="wpa-form-btn cancel" data-cancel="' + block.id + '">Отмена</button></div>' +
             '</div>' +
             '</div>';
@@ -677,7 +690,242 @@ foreach ($pages as $page_key => $page_name) {
                 preview.replaceWith(newPlaceholder);
             }
         }
+        
+        // Upload feature image button
+        if (e.target.classList.contains('wpa-upload-feature-image-btn')) {
+            const blockId = e.target.dataset.block;
+            const index = parseInt(e.target.dataset.index);
+            
+            const frame = wp.media({
+                title: 'Выберите изображение',
+                button: { text: 'Использовать' },
+                multiple: false
+            });
+            
+            frame.on('select', function() {
+                const attachment = frame.state().get('selection').first().toJSON();
+                const imageInput = document.querySelector('#features-editor-' + blockId + ' .wpa-feature-image[data-index="' + index + '"]');
+                
+                if (imageInput) {
+                    imageInput.value = attachment.url;
+                    
+                    // Update preview image
+                    const featureItem = imageInput.closest('.wpa-feature-item');
+                    let previewImg = featureItem.querySelector('.wpa-feature-preview-img');
+                    
+                    if (previewImg) {
+                        previewImg.src = attachment.url;
+                    } else {
+                        const img = document.createElement('img');
+                        img.className = 'wpa-feature-preview-img';
+                        img.src = attachment.url;
+                        img.alt = '';
+                        img.style.cssText = 'width: 80px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; margin-top: 8px;';
+                        e.target.parentElement.appendChild(img);
+                    }
+                    
+                    // Update the JSON data
+                    let blockData = JSON.parse(document.getElementById('data-' + blockId).value);
+                    if (blockData[index]) {
+                        blockData[index].image = attachment.url;
+                        document.getElementById('data-' + blockId).value = JSON.stringify(blockData, null, 2);
+                    }
+                }
+            });
+            
+            frame.open();
+        }
+        
+        // Upload header image button
+        if (e.target.classList.contains('wpa-upload-header-image-btn')) {
+            const blockId = e.target.dataset.block;
+            
+            const frame = wp.media({
+                title: 'Выберите изображение',
+                button: { text: 'Использовать' },
+                multiple: false
+            });
+            
+            frame.on('select', function() {
+                const attachment = frame.state().get('selection').first().toJSON();
+                const imageInput = document.getElementById('header-image-' + blockId);
+                
+                if (imageInput) {
+                    imageInput.value = attachment.url;
+                    
+                    // Update preview
+                    const editorDiv = document.getElementById('header-editor-' + blockId);
+                    let previewImg = editorDiv.querySelector('.wpa-header-preview-img');
+                    
+                    if (previewImg) {
+                        previewImg.src = attachment.url;
+                    } else {
+                        const img = document.createElement('img');
+                        img.className = 'wpa-header-preview-img';
+                        img.src = attachment.url;
+                        img.alt = '';
+                        img.style.cssText = 'width: 120px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;';
+                        e.target.parentElement.insertBefore(img, e.target);
+                    }
+                    
+                    // Update the JSON data
+                    let blockData = JSON.parse(document.getElementById('data-' + blockId).value);
+                    blockData.image = attachment.url;
+                    document.getElementById('data-' + blockId).value = JSON.stringify(blockData, null, 2);
+                }
+            });
+            
+            frame.open();
+        }
     });
+    
+    // Visual editor for features with images (like "Что мы делаем")
+    function renderFeaturesWithImagesEditor(block, blockData) {
+        let html = '<div class="wpa-features-editor" id="features-editor-' + block.id + '">';
+        html += '<div class="wpa-form-group"><label>Элементы блока</label></div>';
+        
+        blockData.forEach(function(item, index) {
+            html += '<div class="wpa-feature-item" style="background: #f6f7f7; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #ddd;">';
+            
+            // Title
+            html += '<div class="wpa-form-group" style="margin-bottom: 12px;">';
+            html += '<label>Название [' + (index + 1) + ']</label>';
+            html += '<input type="text" class="wpa-feature-title" data-index="' + index + '" value="' + escapeHtml(item.title || '') + '" placeholder="Название элемента">';
+            html += '</div>';
+            
+            // Category/Subtitle
+            html += '<div class="wpa-form-group" style="margin-bottom: 12px;">';
+            html += '<label>Категория [' + (index + 1) + ']</label>';
+            html += '<input type="text" class="wpa-feature-subtitle" data-index="' + index + '" value="' + escapeHtml(item.category || item.subtitle || '') + '" placeholder="Категория">';
+            html += '</div>';
+            
+            // Image
+            html += '<div class="wpa-form-group" style="margin-bottom: 12px;">';
+            html += '<label>Изображение [' + (index + 1) + ']</label>';
+            html += '<div style="display: flex; align-items: center; gap: 12px;">';
+            if (item.image) {
+                html += '<img src="' + escapeHtml(item.image) + '" alt="" style="width: 80px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">';
+            }
+            html += '<button type="button" class="wpa-upload-feature-image-btn button" data-block="' + block.id + '" data-index="' + index + '">Выбрать изображение</button>';
+            html += '</div>';
+            html += '<input type="hidden" class="wpa-feature-image" data-index="' + index + '" value="' + escapeHtml(item.image || '') + '">';
+            html += '</div>';
+            
+            html += '</div>';
+        });
+        
+        html += '</div>';
+        
+        // Hidden JSON field with updated data
+        html += '<div class="wpa-form-group" style="margin-top: 16px;">';
+        html += '<label>JSON данные (автообновляется)</label>';
+        html += '<textarea id="data-' + block.id + '" style="min-height: 150px; font-family: monospace; font-size: 12px;">' + escapeHtml(JSON.stringify(blockData, null, 2)) + '</textarea>';
+        html += '</div>';
+        
+        // Add event listeners for dynamic updates
+        setTimeout(function() {
+            document.querySelectorAll('#features-editor-' + block.id + ' .wpa-feature-title').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    updateFeaturesData(block.id, blockData);
+                });
+            });
+            document.querySelectorAll('#features-editor-' + block.id + ' .wpa-feature-subtitle').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    updateFeaturesData(block.id, blockData);
+                });
+            });
+        }, 100);
+        
+        return html;
+    }
+    
+    // Visual editor for header blocks with address, phone, image
+    function renderHeaderBlockEditor(block, blockData) {
+        let html = '<div class="wpa-header-editor" id="header-editor-' + block.id + '">';
+        
+        // Address
+        html += '<div class="wpa-form-group">';
+        html += '<label>Адрес</label>';
+        html += '<input type="text" id="header-address-' + block.id + '" value="' + escapeHtml(blockData.address || '') + '" placeholder="г. Екатеринбург, ул. Промышленная, д. 4, стр. 2">';
+        html += '</div>';
+        
+        // Phone
+        html += '<div class="wpa-form-group">';
+        html += '<label>Телефон</label>';
+        html += '<input type="text" id="header-phone-' + block.id + '" value="' + escapeHtml(blockData.phone || '') + '" placeholder="+7 (900) 123-45-67">';
+        html += '</div>';
+        
+        // Image
+        html += '<div class="wpa-form-group">';
+        html += '<label>Изображение</label>';
+        html += '<div style="display: flex; align-items: center; gap: 16px;">';
+        if (blockData.image) {
+            html += '<img src="' + escapeHtml(blockData.image) + '" alt="" style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">';
+        }
+        html += '<button type="button" class="wpa-upload-header-image-btn button" data-block="' + block.id + '">Выбрать изображение</button>';
+        html += '</div>';
+        html += '<input type="hidden" id="header-image-' + block.id + '" value="' + escapeHtml(blockData.image || '') + '">';
+        html += '</div>';
+        
+        html += '</div>';
+        
+        // Hidden JSON field that updates automatically
+        html += '<div class="wpa-form-group" style="margin-top: 16px;">';
+        html += '<label>JSON данные (автообновляется)</label>';
+        html += '<textarea id="data-' + block.id + '" style="min-height: 100px; font-family: monospace; font-size: 12px;">' + escapeHtml(JSON.stringify(blockData, null, 2)) + '</textarea>';
+        html += '</div>';
+        
+        // Add event listeners for auto-update
+        setTimeout(function() {
+            const addressInput = document.getElementById('header-address-' + block.id);
+            const phoneInput = document.getElementById('header-phone-' + block.id);
+            const imageInput = document.getElementById('header-image-' + block.id);
+            
+            if (addressInput) {
+                addressInput.addEventListener('input', function() {
+                    blockData.address = addressInput.value;
+                    document.getElementById('data-' + block.id).value = JSON.stringify(blockData, null, 2);
+                });
+            }
+            
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    blockData.phone = phoneInput.value;
+                    document.getElementById('data-' + block.id).value = JSON.stringify(blockData, null, 2);
+                });
+            }
+        }, 100);
+        
+        return html;
+    }
+    
+    function updateFeaturesData(blockId, blockData) {
+        // Collect all values
+        const titles = document.querySelectorAll('#features-editor-' + blockId + ' .wpa-feature-title');
+        const subtitles = document.querySelectorAll('#features-editor-' + blockId + ' .wpa-feature-subtitle');
+        const images = document.querySelectorAll('#features-editor-' + blockId + ' .wpa-feature-image');
+        
+        titles.forEach(function(input, index) {
+            if (blockData[index]) {
+                blockData[index].title = input.value;
+            }
+        });
+        
+        subtitles.forEach(function(input, index) {
+            if (blockData[index]) {
+                blockData[index].category = input.value;
+            }
+        });
+        
+        images.forEach(function(input, index) {
+            if (blockData[index]) {
+                blockData[index].image = input.value;
+            }
+        });
+        
+        // Update JSON textarea
+        document.getElementById('data-' + blockId).value = JSON.stringify(blockData, null, 2);
+    }
     
     // Initial load
     loadBlocks('home');

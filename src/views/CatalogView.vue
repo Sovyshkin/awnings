@@ -26,7 +26,7 @@
         </div>
         <span class="card-title">{{ item.title }}</span>
         <span class="card-price">{{ item.price || 'Цена по запросу' }}</span>
-        <button class="card-btn" @click.stop="openLeadForm(item)">
+        <button class="card-btn" @click.stop="goToCard(item)">
           В конфигуратор модели 
           <div class="wrap-btn-img">
             <img class="btn-img" :src="arrowUpRight" alt="">
@@ -81,7 +81,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import WhyUs from '../components/WhyUs.vue'
 import Faq from '../components/FaqBlock.vue'
 import cardImg from '../assets/card.png'
@@ -89,6 +89,7 @@ import arrowUpRight from '../assets/arrow-up-right.svg'
 import { fetchProducts, fetchCategories, submitLead } from '../services/api'
 
 const route = useRoute()
+const router = useRouter()
 
 const categories = ref([
   { id: 'all', name: 'Все' },
@@ -154,6 +155,11 @@ const setCategory = (categoryId) => {
   const cat = categories.value.find(c => c.id === categoryId)
   activeCategory.value = categoryId
   loadProducts(cat?.slug || '')
+}
+
+// Go to card page (configurator)
+const goToCard = (product) => {
+  router.push({ name: 'card', params: { id: product.id } })
 }
 
 // Open lead form for a product

@@ -17,48 +17,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { fetchContentBlocks } from '../services/api'
-
-const cards = ref([
+const cards = [
   {
     title: '15',
     subtitle: 'лет на рынке',
-    desc: 'проектируем и устанавливаем конструкции, которые выдерживают реальные условия эксплуатации'
+    desc: 'проектируем и устанавливаем конструкции, которые выдерживают реальные условия эксплуатации',
+    image: 'company-card-1.png'
   },
   {
     title: '3 200+',
     subtitle: 'установленных навесов',
-    desc: 'Отработали десятки сценариев: частные участки, коммерческие объекты, нестандартные решения'
+    desc: 'Отработали десятки сценариев: частные участки, коммерческие объекты, нестандартные решения',
+    image: 'company-card-2.png'
   },
   {
     title: '52',
     subtitle: 'города доставки',
-    desc: 'Организуем логистику и монтаж так, чтобы вы получили готовый результат без срывов и "по месту разберёмся"'
+    desc: 'Организуем логистику и монтаж так, чтобы вы получили готовый результат без срывов и "по месту разберёмся"',
+    image: 'company-card-3.jpg'
   }
-])
-
-async function loadCompanyNumbers() {
-  const blocks = await fetchContentBlocks('home')
-  const numbersBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Компания в цифрах')
-  if (numbersBlock && numbersBlock.block_data) {
-    let data = numbersBlock.block_data
-    if (typeof data === 'string') {
-      try {
-        data = JSON.parse(data)
-      } catch (e) {
-        return
-      }
-    }
-    if (Array.isArray(data) && data.length > 0) {
-      cards.value = data
-    }
-  }
-}
-
-onMounted(() => {
-  loadCompanyNumbers()
-})
+]
 </script>
 
 <style scoped>
@@ -97,58 +75,100 @@ h2 {
 }
 
 .card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 .card::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.9);
-  z-index: -1;
-  border-radius: 4px;
+  background: #00000080;
+  pointer-events: none;
+  z-index: 0;
+  transition: background 0.3s ease;
+}
+
+.card:hover::before {
+  background: #00000060;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .card-wrap-title {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 18px;
 }
 
 .card-title {
-  font-size: 64px;
-  font-weight: 600;
-  color: #000;
-  transition: color 0.3s ease;
+  color: #ffffff;
+  font-size: 96px;
+  font-weight: 400;
+  transition: transform 0.3s ease;
 }
 
 .card:hover .card-title {
-  color: #C96744;
+  transform: scale(1.05);
 }
 
 .card-rectangle {
-  width: 100%;
   height: 4px;
+  background-color: #ffffff;
+  margin-left: -33px;
+  margin-right: -33px;
+  transition: background-color 0.3s ease;
+}
+
+.card:hover .card-rectangle {
   background-color: #C96744;
 }
 
 .card-subtitle {
-  font-size: 20px;
-  font-weight: 500;
-  color: #000;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 400;
+  transition: color 0.3s ease;
+}
+
+.card:hover .card-subtitle {
+  color: #C96744;
 }
 
 .card-desc {
-  width: 100%;
+  box-shadow: 0px 4px 4px 0px #00000040;
+  backdrop-filter: blur(20.899999618530273px);
+  width: calc(100% + 66px);
+  padding: 12px 17px 12px 31px;
+  border-radius: 44px;
+  box-sizing: border-box;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: 0 -33px 13px -33px;
+}
+
+.card:hover .card-desc {
+  transform: translateY(4px);
+  box-shadow: 0px 8px 20px 0px #00000050;
 }
 
 .card-desc span {
+  color: #ffffff;
   font-size: 16px;
   font-weight: 300;
-  color: #000;
   opacity: 0.8;
-  line-height: 1.5;
+}
+
+.card:nth-child(1) {
+  background-image: url("../assets/company-card-1.png");
+}
+.card:nth-child(2) {
+  background-image: url("../assets/company-card-2.png");
+}
+.card:nth-child(3) {
+  background-image: url("../assets/company-card-3.jpg");
 }
 
 @media (max-width: 1200px) {
@@ -161,17 +181,26 @@ h2 {
     font-size: 36px;
   }
 
+  .cards {
+    gap: 16px;
+  }
+
   .card {
     height: 340px;
-    padding: 10px 24px;
+    min-width: 280px;
+    flex: 1;
   }
 
   .card-title {
-    font-size: 52px;
+    font-size: 72px;
   }
 
   .card-subtitle {
-    font-size: 18px;
+    font-size: 20px;
+  }
+
+  .card-desc {
+    height: 72px;
   }
 
   .card-desc span {
@@ -190,16 +219,47 @@ h2 {
   }
 
   .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
 
   .card {
     height: 280px;
-    padding: 10px 20px;
+    min-width: auto;
+    flex: none;
   }
 
   .card-title {
-    font-size: 44px;
+    font-size: 56px;
+  }
+
+  .card-subtitle {
+    font-size: 18px;
+  }
+
+  .card-desc {
+    height: 68px;
+    padding: 10px 14px 10px 24px;
+  }
+
+  .card-rectangle {
+    margin-left: -24px;
+    margin-right: -24px;
+  }
+}
+
+@media (max-width: 900px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .card {
+    height: 260px;
+  }
+
+  .card-title {
+    font-size: 48px;
   }
 
   .card-subtitle {
@@ -219,32 +279,24 @@ h2 {
 
   .cards {
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
   }
 
   .card {
-    height: auto;
-    min-height: 200px;
-    padding: 16px 20px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-content: flex-start;
+    height: 280px;
+    max-width: 100%;
   }
 
   .card-title {
-    font-size: 36px;
+    font-size: 56px;
   }
 
   .card-subtitle {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .card-desc {
-    width: 100%;
-  }
-
-  .card-desc span {
-    font-size: 13px;
+    height: 64px;
   }
 }
 
@@ -259,20 +311,20 @@ h2 {
   }
 
   .card {
-    min-height: 160px;
-    padding: 12px 16px;
+    height: 240px;
   }
 
   .card-title {
-    font-size: 28px;
+    font-size: 48px;
   }
 
   .card-subtitle {
-    font-size: 12px;
+    font-size: 14px;
   }
 
-  .card-rectangle {
-    height: 2px;
+  .card-desc {
+    height: 56px;
+    padding: 10px 14px 10px 24px;
   }
 
   .card-desc span {

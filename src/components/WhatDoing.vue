@@ -24,10 +24,16 @@ import cardImage from '../assets/card.png'
 
 const sectionTitle = ref('')
 const cards = ref([
-  { title: 'Беседка для отдыха', category: 'Сад', image: '' },
-  { title: 'Мангальные зоны', category: 'Барбекю', image: '' },
-  { title: 'Навесы для автомобилей', category: 'Авто', image: '' }
+  { title: 'Беседка для отдыха', category: 'Сад', image: cardImage },
+  { title: 'Мангальные зоны', category: 'Барбекю', image: cardImage },
+  { title: 'Навесы для автомобилей', category: 'Авто', image: cardImage }
 ])
+
+function getImageUrl(imagePath) {
+  if (!imagePath) return cardImage
+  if (imagePath.startsWith('http')) return imagePath
+  return `/wp-content/themes/wp-awnings/assets/${imagePath.split('/').pop()}`
+}
 
 async function loadWhatDoingData() {
   const blocks = await fetchContentBlocks('home')
@@ -44,7 +50,10 @@ async function loadWhatDoingData() {
         }
       }
       if (Array.isArray(data) && data.length > 0) {
-        cards.value = data
+        cards.value = data.map(card => ({
+          ...card,
+          image: card.image ? getImageUrl(card.image) : cardImage
+        }))
       }
     }
   }

@@ -1,3 +1,13 @@
+<script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const goToCard = (index) => {
+  router.push({ name: 'card', params: { id: index } })
+}
+</script>
+
 <template>
   <section class="how-work">
     <div class="wrap-title">
@@ -18,7 +28,7 @@
           </div>
           <span class="card-title">Беседка 6м2</span>
           <span class="card-price">от 126 000 ₽</span>
-          <button class="card-btn">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
+          <button class="card-btn" @click="goToCard(1)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
         </div>
         <div class="card">
           <div class="wrap-img">
@@ -26,7 +36,7 @@
           </div>
           <span class="card-title">Мангальная зона Стандарт</span>
           <span class="card-price">от 126 000 ₽</span>
-          <button class="card-btn">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
+          <button class="card-btn" @click="goToCard(2)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
         </div>
         <div class="card">
           <div class="wrap-img">
@@ -34,7 +44,7 @@
           </div>
           <span class="card-title">Навес для автомобиля 6м2</span>
           <span class="card-price">от 126 000 ₽</span>
-          <button class="card-btn">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
+          <button class="card-btn" @click="goToCard(3)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
         </div>
       </div>
       <div class="wrap-catalog">

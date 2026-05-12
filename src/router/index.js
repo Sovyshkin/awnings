@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import CatalogView from '../views/CatalogView.vue'
+import CardPage from '../views/CardPage.vue'
 import GarantView from '../views/GarantView.vue'
 import DeliveryPayment from '../views/DeliveryPayment.vue'
 import NewsArticles from '../views/NewsArticles.vue'
@@ -13,6 +14,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/catalog', name: 'catalog', component: CatalogView },
+    { path: '/card/:id', name: 'card', component: CardPage },
     { path: '/garant', name: 'garant', component: GarantView },
     { path: '/delivery-and-payment', name: 'delivery-payment', component: DeliveryPayment },
     { path: '/news-articles', name: 'news-articles', component: NewsArticles },

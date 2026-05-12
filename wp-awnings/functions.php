@@ -1120,24 +1120,6 @@ function wp_awnings_create_initial_content() {
     ), JSON_UNESCAPED_UNICODE));
     update_post_meta($companynums_id, 'block_order', $order++);
     
-    // Наши проекты section
-    $projects_id = wp_insert_post(array('post_type' => 'content_block', 'post_title' => 'Наши проекты', 'post_status' => 'publish'));
-    update_post_meta($projects_id, 'block_name', 'Наши проекты');
-    update_post_meta($projects_id, 'block_type', 'gallery');
-    update_post_meta($projects_id, 'block_page', 'home');
-    update_post_meta($projects_id, 'block_data', json_encode(array(
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-        array('image' => 'company-card-1.png'),
-    ), JSON_UNESCAPED_UNICODE));
-    update_post_meta($projects_id, 'block_order', $order++);
-    
     // ===== ABOUT PAGE =====
     
     // Company block
