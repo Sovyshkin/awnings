@@ -56,23 +56,25 @@ const card = computed(() => {
         <div class="wrap-card">
             <div class="wrap-images">
                 <div class="main-image">
-                    <img src="" alt="">
+                    <img src="../assets/card-page-1.png" alt="">
                 </div>
                 <div class="other-images">
-                    <img src="" alt="">
+                    <img src="../assets/card-page-2.png" alt="">
+                    <img src="../assets/card-page-3.png" alt="">
+                    <img src="../assets/card-page-4.png" alt="">
                 </div>
             </div>
             <div class="card-info">
                 <h2>Конфигуратор конструкции</h2>
                 <div class="group" v-for="item in card.data">
-                    <h3>item.name</h3>
+                    <h3>{{item.name}}</h3>
                     <div class="item-group" v-for="i in item.items">
                         <div class="item-name">
                             <span class="name">{{ i.name }}</span>
                             <span class="desc">{{ i.desc }}</span>
                         </div>
                         <div class="item-price">
-                            <span class="price">{{ i.price }} ₽</span>
+                            <span class="price">+ {{ i.price }} ₽</span>
                             <input type="radio">
                         </div>
                     </div>
@@ -147,6 +149,36 @@ h1 {
     gap: 20px;
 }
 
+.wrap-images {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main-image {
+    width: 100%;
+    height: 694px;
+}
+
+.main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.other-images {
+    display: flex;
+    gap: 20px;
+}
+
+.other-images img {
+    width: 33%;
+    height: 203px;
+    border-radius: 4px;
+}
+
 .card-info {
     width: 40%;
     background-color: #E2E2E2;
@@ -155,6 +187,12 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 h2 {
@@ -179,6 +217,18 @@ h3 {
     justify-content: space-between;
 }
 
+.item-name {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+}
+
+.item-price {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 .name {
     color: #000000;
     font-size: 16px;
@@ -195,5 +245,38 @@ h3 {
     color: #000000;
     font-size: 16px;
     font-weight: 600;
+}
+
+input {
+    border: 3px solid #D9D9D9;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    accent-color: #C96744;
+}
+
+.card-price {
+    padding-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-price .price {
+    color: #000;
+    font-size: 52px;
+    font-weight: 600;
+}
+
+.btn {
+    width: 210px;
+    padding: 20px 60px;
+    border-radius: 44px;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    color: #fff;
+    background-color: #C96744;
 }
 </style>
