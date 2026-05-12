@@ -1,0 +1,20 @@
+=== ИСПРАВЛЕНИЕ ФАЙЛА content-admin.php ===
+
+Проблема: файл испорчен - есть дубликаты функций.
+
+РЕШЕНИЕ 1: Скачать оригинальный файл с GitHub
+
+Выполни на сервере:
+cd /var/www/awnings
+git checkout wp-awnings/admin/content-admin.php
+cp wp-awnings/admin/content-admin.php /var/www/wordpress/wp-content/themes/wp-awnings/admin/
+sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/wp-awnings/admin/content-admin.php
+
+Если git checkout не работает (файл уже был изменён и запушен):
+
+РЕШЕНИЕ 2: Скачать свежую версию с GitHub напрямую
+
+curl -o /var/www/wordpress/wp-content/themes/wp-awnings/admin/content-admin.php https://raw.githubusercontent.com/Sovyshkin/awnings/main/wp-awnings/admin/content-admin.php
+sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/wp-awnings/admin/content-admin.php
+
+После этого обнови страницу админки в браузере (Ctrl+F5)

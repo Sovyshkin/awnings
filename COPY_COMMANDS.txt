@@ -1,0 +1,18 @@
+=== КОПИРОВАНИЕ ИСПРАВЛЕННОГО ФАЙЛА НА СЕРВЕР ===
+
+ВЫПОЛНИ НА СЕРВЕРЕ (подключись по SSH через терминал):
+
+1. Обнови файлы из репозитория:
+cd /var/www/awnings
+git pull origin main
+
+2. Скопируй исправленный файл в WordPress тему:
+cp /var/www/awnings/wp-awnings/admin/content-admin.php /var/www/wordpress/wp-content/themes/wp-awnings/admin/
+
+3. Измени владельца файла:
+sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/wp-awnings/admin/content-admin.php
+
+4. Проверь что скопировалось:
+ls -la /var/www/wordpress/wp-content/themes/wp-awnings/admin/content-admin.php
+
+5. Обнови страницу админки WordPress в браузере (Ctrl+F5)
