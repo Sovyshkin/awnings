@@ -379,6 +379,28 @@ foreach ($pages as $page_key => $page_name) {
 
 <script>
 (function() {
+    // Ensure wp.media is available
+    if (typeof wp === 'undefined' || typeof wp.media === 'undefined') {
+        console.warn('WordPress media library not loaded yet, waiting...');
+        // Wait for wp.media to be available
+        function waitForMedia() {
+            if (typeof wp !== 'undefined' && typeof wp.media !== 'undefined') {
+                initMediaButtons();
+            } else {
+                setTimeout(waitForMedia, 100);
+            }
+        }
+        // Start waiting after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForMedia);
+        } else {
+            waitForMedia();
+        }
+    } else {
+        initMediaButtons();
+    }
+    
+    function initMediaButtons() {
     const API_URL = '<?php echo rest_url('wp-awnings/v1'); ?>';
     const NONCE = '<?php echo $nonce; ?>';
     let currentPage = 'home';
