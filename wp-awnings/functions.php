@@ -192,7 +192,9 @@ function wp_awnings_create_product($request) {
     $title = isset($request['title']) ? sanitize_text_field($request['title']) : '';
     $content = isset($request['content']) ? wp_kses_post($request['content']) : '';
     $price = isset($request['price']) ? sanitize_text_field($request['price']) : '';
+    $base_price = isset($request['base_price']) ? sanitize_text_field($request['base_price']) : '';
     $category_id = isset($request['category_id']) ? (int)$request['category_id'] : 0;
+    $product_desc = isset($request['desc']) ? wp_kses_post($request['desc']) : '';
     
     // Handle image_url as array or string
     $image_raw = $request->get_param('image_url');
@@ -201,6 +203,10 @@ function wp_awnings_create_product($request) {
     } else {
         $image_url = esc_url_raw($image_raw);
     }
+    
+    // Handle params and config as JSON
+    $params_raw = $request->get_param('params');
+    $config_raw = $request->get_param('config');
 
     if (empty($title)) {
         return new WP_Error('missing_title', 'Product title is required', array('status' => 400));
@@ -222,8 +228,20 @@ function wp_awnings_create_product($request) {
     if (!empty($price)) {
         update_post_meta($post_id, 'product_price', $price);
     }
+    if (!empty($base_price)) {
+        update_post_meta($post_id, 'product_base_price', $base_price);
+    }
     if (!empty($image_url)) {
         update_post_meta($post_id, 'product_image_url', $image_url);
+    }
+    if (!empty($product_desc)) {
+        update_post_meta($post_id, 'product_description', $product_desc);
+    }
+    if (!empty($params_raw)) {
+        update_post_meta($post_id, 'product_params', is_array($params_raw) ? json_encode($params_raw, JSON_UNESCAPED_UNICODE) : $params_raw);
+    }
+    if (!empty($config_raw)) {
+        update_post_meta($post_id, 'product_config', is_array($config_raw) ? json_encode($config_raw, JSON_UNESCAPED_UNICODE) : $config_raw);
     }
 
     if ($category_id > 0) {
@@ -251,7 +269,9 @@ function wp_awnings_update_product($request) {
     $title = isset($request['title']) ? sanitize_text_field($request['title']) : $post->post_title;
     $content = isset($request['content']) ? wp_kses_post($request['content']) : $post->post_content;
     $price = isset($request['price']) ? sanitize_text_field($request['price']) : get_post_meta($id, 'product_price', true);
+    $base_price = isset($request['base_price']) ? sanitize_text_field($request['base_price']) : get_post_meta($id, 'product_base_price', true);
     $category_id = isset($request['category_id']) ? (int)$request['category_id'] : 0;
+    $product_desc = isset($request['desc']) ? wp_kses_post($request['desc']) : get_post_meta($id, 'product_description', true);
     
     // Handle image_url as array or string
     $image_raw = $request->get_param('image_url');
@@ -264,6 +284,10 @@ function wp_awnings_update_product($request) {
     } else {
         $image_url = get_post_meta($id, 'product_image_url', true);
     }
+    
+    // Handle params and config as JSON
+    $params_raw = $request->get_param('params');
+    $config_raw = $request->get_param('config');
 
     $post_data = array(
         'ID' => $id,
@@ -274,7 +298,16 @@ function wp_awnings_update_product($request) {
     wp_update_post($post_data);
 
     update_post_meta($id, 'product_price', $price);
+    update_post_meta($id, 'product_base_price', $base_price);
     update_post_meta($id, 'product_image_url', $image_url);
+    update_post_meta($id, 'product_description', $product_desc);
+    
+    if ($params_raw !== null) {
+        update_post_meta($id, 'product_params', is_array($params_raw) ? json_encode($params_raw, JSON_UNESCAPED_UNICODE) : $params_raw);
+    }
+    if ($config_raw !== null) {
+        update_post_meta($id, 'product_config', is_array($config_raw) ? json_encode($config_raw, JSON_UNESCAPED_UNICODE) : $config_raw);
+    }
 
     if ($category_id > 0) {
         $term = get_term($category_id, 'product_category');
@@ -427,15 +460,42 @@ function wp_awnings_format_product($post) {
         $category_name = $categories[0]->name;
     }
     
+    // Get params (characteristics)
+    $params_raw = get_post_meta($post->ID, 'product_params', true);
+    $params = array();
+    if (!empty($params_raw)) {
+        $decoded = json_decode($params_raw, true);
+        if (is_array($decoded)) {
+            $params = $decoded;
+        }
+    }
+    
+    // Get config data (options/configurator)
+    $config_raw = get_post_meta($post->ID, 'product_config', true);
+    $config = array();
+    if (!empty($config_raw)) {
+        $decoded = json_decode($config_raw, true);
+        if (is_array($decoded)) {
+            $config = $decoded;
+        }
+    }
+    
+    // Get full description
+    $product_desc = get_post_meta($post->ID, 'product_description', true);
+    
     return array(
         'id' => $post->ID,
         'title' => $post->post_title,
         'content' => $post->post_content,
         'price' => get_post_meta($post->ID, 'product_price', true),
+        'base_price' => get_post_meta($post->ID, 'product_base_price', true),
         'category_id' => $category_id,
         'category' => $category,
         'category_name' => $category_name,
         'image_url' => get_post_meta($post->ID, 'product_image_url', true),
+        'params' => $params,
+        'config' => $config,
+        'desc' => $product_desc,
         'slug' => $post->post_name,
         'date' => $post->post_date,
     );

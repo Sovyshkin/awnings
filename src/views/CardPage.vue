@@ -1,9 +1,99 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { fetchProduct } from '../services/api'
+import WhyUs from '../components/WhyUs.vue'
+import Faq from '../components/FaqBlock.vue'
+
+const WP_API_URL = import.meta.env.VITE_WP_API_URL || 'http://localhost/vip-flot/index.php?rest_route=/wp-awnings/v1'
 
 const route = useRoute()
 const router = useRouter()
+
+const loading = ref(true)
+const productData = ref(null)
+
+// Order modal states
+const showOrderModal = ref(false)
+const orderStep = ref(1) // 1: config review, 2: form, 3: success
+const orderFormData = ref({
+  name: '',
+  phone: '',
+  email: '',
+  address: '',
+  agree: false
+})
+const orderSubmitting = ref(false)
+
+// Open order modal
+const openOrderModal = () => {
+  showOrderModal.value = true
+  orderStep.value = 1
+}
+
+// Close order modal
+const closeOrderModal = () => {
+  showOrderModal.value = false
+  orderStep.value = 1
+  orderFormData.value = { name: '', phone: '', email: '', address: '', agree: false }
+}
+
+// Go to form step
+const goToFormStep = () => {
+  orderStep.value = 2
+}
+
+// Go to success step
+const submitOrder = async () => {
+  orderSubmitting.value = true
+  
+  try {
+    // Submit lead with product info using the same API format as api.js
+    const response = await fetch(`${WP_API_URL}/leads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: orderFormData.value.name,
+        phone: orderFormData.value.phone,
+        message: `Заказ товара: ${productData.value?.title}. Конфигурация: ${getConfigSummary()}. Email: ${orderFormData.value.email}. Адрес: ${orderFormData.value.address}`,
+        product_id: productData.value?.id,
+        agree: true
+      })
+    })
+    
+    if (response.ok) {
+      orderStep.value = 3
+    }
+  } catch (error) {
+    console.error('Error submitting order:', error)
+    // Still show success for demo
+    orderStep.value = 3
+  } finally {
+    orderSubmitting.value = false
+  }
+}
+
+// Get config summary for order
+const getConfigSummary = () => {
+  if (!card.value?.data) return ''
+  const parts = []
+  for (const group of card.value.data) {
+    const selectedItemName = selectedOptions.value[group.name]
+    if (selectedItemName) {
+      const item = group.items.find(i => i.name === selectedItemName)
+      if (item && item.price > 0) {
+        parts.push(`${group.name}: ${item.name}`)
+      }
+    }
+  }
+  return parts.join(', ')
+}
+
+// Go to home
+const goToHome = () => {
+  router.push('/')
+  closeOrderModal()
+}
 
 const images = ref([
   { id: 1, src: '/src/assets/card-page-1.png', alt: 'Изображение 1' },
@@ -13,7 +103,13 @@ const images = ref([
 ])
 
 const currentImageIndex = ref(0)
-const currentImage = computed(() => images.value[currentImageIndex.value])
+const currentImage = computed(() => {
+  if (productData.value && productData.value.image_url && productData.value.image_url.length > 0) {
+    const url = productData.value.image_url[currentImageIndex.value]
+    return { id: currentImageIndex.value + 1, src: url, alt: `Изображение ${currentImageIndex.value + 1}` }
+  }
+  return images.value[currentImageIndex.value] || images.value[0]
+})
 const isFullscreen = ref(false)
 
 const selectImage = (index) => {
@@ -21,11 +117,17 @@ const selectImage = (index) => {
 }
 
 const nextImage = () => {
-  currentImageIndex.value = (currentImageIndex.value + 1) % images.value.length
+  const maxIndex = productData.value && productData.value.image_url 
+    ? productData.value.image_url.length - 1 
+    : images.value.length - 1
+  currentImageIndex.value = (currentImageIndex.value + 1) % (maxIndex + 1)
 }
 
 const prevImage = () => {
-  currentImageIndex.value = (currentImageIndex.value - 1 + images.value.length) % images.value.length
+  const maxIndex = productData.value && productData.value.image_url 
+    ? productData.value.image_url.length - 1 
+    : images.value.length - 1
+  currentImageIndex.value = (currentImageIndex.value - 1 + maxIndex + 1) % (maxIndex + 1)
 }
 
 const openFullscreen = () => {
@@ -48,32 +150,25 @@ const handleKeydown = (e) => {
   }
 }
 
-const params = [
-  { name: 'Ширина', value: '6 м.' },
-  { name: 'Длина', value: '6 м.' },
-  { name: 'Скат крыши (ферма)', value: 'Односкатная' },
-  { name: 'Стеновой комплект', value: 'Клееный брус' },
-  { name: 'Материал кровли', value: 'ПВХ мембрана' },
-  { name: 'Столбы (мм.)', value: '150x150 мм.' },
-  { name: 'Стропильная система (мм.)', value: '190x40 мм.' },
-  { name: 'Хозблок', value: 'Нет' },
-  { name: 'Отделка стен', value: 'Имитация бруса лиственница' },
-  { name: 'Тип остекления', value: 'Холодное' },
-  { name: 'Остекление', value: 'ПВХ Slidors' },
-  { name: 'Терраса', value: 'Нет' },
-  { name: 'Стандартная высота', value: '2.5 м.' },
-  { name: 'Название модели', value: 'Деревянная угловая беседка №62' },
-  { name: 'Окрас конструкции', value: 'Все элементы конструкции окрашиваются в 2 слоя с промежуточной и финишной шлифовкой. Стандартная краска Teknos Akrylin (цвет на выбор) по каталогу RAL Classic – более 1000 цветов. Масло или другие производители красок – рассчитываются индивидуально.' }
-];
-
 // Track selected options per group - null means no selection, string means selected item name
-const selectedOptions = ref({
-  'Основа': 'Пакет база',
-  'Кровля': null,  // null for single-item groups means not selected
-  'Контур': null,
-  'Мангальная зона': null,
-  'Мебель': null
-})
+const selectedOptions = ref({})
+
+// Initialize selected options when product loads
+const initializeSelectedOptions = () => {
+  if (!card.value.data) return
+  
+  const initial = {}
+  for (const group of card.value.data) {
+    // Find first item with price 0 or first item
+    const baseItem = group.items.find(i => i.price === 0) || group.items[0]
+    if (baseItem) {
+      initial[group.name] = baseItem.name
+    } else {
+      initial[group.name] = null
+    }
+  }
+  selectedOptions.value = initial
+}
 
 const toggleOption = (groupName, itemName, itemPrice) => {
   const group = card.value.data.find(g => g.name === groupName)
@@ -114,35 +209,81 @@ const hasSelection = (groupName) => {
 }
 
 // Calculate total price based on selected options
-const totalPrice = ref(189000)
+const totalPrice = ref(0)
 
 const calculateTotalPrice = () => {
-  const basePrice = 189000
+  const basePrice = Number(productData.value?.base_price) || Number(productData.value?.price) || 0
   let additionalPrice = 0
   
   for (const group of card.value.data) {
     const selectedItemName = selectedOptions.value[group.name]
     const selectedItem = group.items.find(i => i.name === selectedItemName)
-    if (selectedItem && selectedItem.price > 0) {
-      additionalPrice += selectedItem.price
+    if (selectedItem && Number(selectedItem.price) > 0) {
+      additionalPrice += Number(selectedItem.price)
     }
   }
   
   totalPrice.value = basePrice + additionalPrice
 }
 
+// Fetch product data from API
+onMounted(async () => {
+  const productId = route.params.id
+  if (productId) {
+    try {
+      const product = await fetchProduct(productId)
+      if (product) {
+        productData.value = product
+        initializeSelectedOptions()
+        calculateTotalPrice()
+      }
+    } catch (error) {
+      console.error('Error loading product:', error)
+    }
+  }
+  loading.value = false
+})
+
 const card = computed(() => {
-  const id = route.params.id
+  if (!productData.value) {
+    // Fallback data for demo
+    return {
+      title: 'Беседка 6м2',
+      params: [
+        { name: 'Ширина', value: '6 м.' },
+        { name: 'Длина', value: '6 м.' },
+        { name: 'Скат крыши (ферма)', value: 'Односкатная' },
+        { name: 'Стеновой комплект', value: 'Клееный брус' },
+        { name: 'Материал кровли', value: 'ПВХ мембрана' },
+        { name: 'Столбы (мм.)', value: '150x150 мм.' },
+        { name: 'Стропильная система (мм.)', value: '190x40 мм.' },
+        { name: 'Хозблок', value: 'Нет' },
+        { name: 'Отделка стен', value: 'Имитация бруса лиственница' },
+        { name: 'Тип остекления', value: 'Холодное' },
+        { name: 'Остекление', value: 'ПВХ Slidors' },
+        { name: 'Терраса', value: 'Нет' },
+        { name: 'Стандартная высота', value: '2.5 м.' },
+        { name: 'Название модели', value: 'Деревянная угловая беседка №62' },
+        { name: 'Окрас конструкции', value: 'Все элементы конструкции окрашиваются в 2 слоя с промежуточной и финишной шлифовкой.' }
+      ],
+      data: [
+        { name: 'Основа', items: [{name: 'Пакет база', desc: '', price: 0}, {name: 'Пакет Основа +', desc: 'Усиленный каркас', price: 35000}] },
+        {name: 'Кровля', items: [{name: 'Пакет Небо', desc: 'Базовая кровля', price: 49000}] },
+        {name: 'Контур', items: [{name: 'Пакет Уют', desc: 'Пол + полная обшивка', price: 99000}] },
+        {name: 'Мангальная зона', items: [{name: 'Пакет Огонь', desc: '', price: 119000}] },
+        {name: 'Мебель', items: [{name: 'Пакет', desc: 'Стол + 2 скамьи + 2 стула', price: 69000}] }
+      ],
+      price: 189000,
+      desc: 'Дизайнерский L-образный садовый павильон в стиле современной архитектуры.'
+    }
+  }
+  
   return {
-    title: 'Беседка 6м2',
-    params: params,
-    data: [{ name: 'Основа', items: [{name: 'Пакет база', desc: '', price: 0}, {name: 'Пакет Основа +', desc: 'Усиленный каркас', price: 35000} ] },
-    {name: 'Кровля', items: [{name: 'Пакет Небо', desc: 'Базовая кровля', price: 49000} ] },
-    {name: 'Контур', items: [{name: 'Пакет Уют', desc: 'Пол + полная обшивка', price: 99000} ] },
-    {name: 'Мангальная зона', items: [{name: 'Пакет Огонь', desc: '', price: 119000} ] },
-    {name: 'Мебель', items: [{name: 'Пакет', desc: 'Стол + 2 скамьи + 2 стула', price: 69000} ] }
-  ],
-  price: 189000
+    title: productData.value.title,
+    params: productData.value.params || [],
+    data: productData.value.config || [],
+    price: productData.value.price,
+    desc: productData.value.desc || productData.value.content || ''
   }
 })
 
@@ -173,13 +314,13 @@ const card = computed(() => {
                 </div>
                 <div class="other-images">
                     <div 
-                        v-for="(image, index) in images" 
-                        :key="image.id"
+                        v-for="(image, index) in (productData?.image_url || images)" 
+                        :key="index"
                         class="thumbnail"
                         :class="{ active: currentImageIndex === index }"
                         @click="selectImage(index)"
                     >
-                        <img :src="image.src" :alt="image.alt">
+                        <img :src="typeof image === 'string' ? image : image.src" :alt="`Изображение ${index + 1}`">
                     </div>
                 </div>
             </div>
@@ -207,14 +348,23 @@ const card = computed(() => {
                 </div>
                 <div class="card-price">
                     <span class="price">{{ totalPrice.toLocaleString() }} ₽</span>
-                    <button class="btn">Заказать</button>
+                    <button class="btn" @click="openOrderModal">Заказать</button>
                 </div>
             </div>
         </div>
         <div class="card-params">
-            
+            <h3>Характеристика базовой модели</h3>
+            <div class="params">
+                <div class="param" v-for="(param, index) in card.params" :key="param.name" :class="{ 'last-param': index === card.params.length - 1 }">
+                    <span class="param-name">{{ param.name }}:</span>
+                    <span class="param-value">{{ param.value }}</span>  
+                </div>
+            </div>
+            <p class="param-desc">{{ card.desc }}</p>
         </div>
     </main>
+    <WhyUs />
+    <Faq />
 
     <!-- Fullscreen Modal -->
     <Teleport to="body">
@@ -238,6 +388,90 @@ const card = computed(() => {
                 </svg>
             </button>
             <div class="fullscreen-counter">{{ currentImageIndex + 1 }} / {{ images.length }}</div>
+        </div>
+    </Teleport>
+
+    <!-- Order Modal -->
+    <Teleport to="body">
+        <div v-if="showOrderModal" class="order-modal-overlay" @click.self="closeOrderModal">
+            <div class="order-modal">
+                <button class="order-modal-close" @click="closeOrderModal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+
+                <!-- Step 1: Config Review -->
+                <div v-if="orderStep === 1" class="order-step">
+                    <h2 class="order-title">Ваша конфигурация</h2>
+                    <div class="order-config">
+                        <div class="order-product-info">
+                            <h3>{{ card.title }}</h3>
+                            <span class="order-price">{{ totalPrice.toLocaleString() }} ₽</span>
+                        </div>
+                        <div class="order-options">
+                            <div v-for="item in card.data" :key="item.name" class="order-option-group">
+                                <span class="order-option-label">{{ item.name }}</span>
+                                <div class="order-option-items">
+                                    <span v-for="i in item.items" 
+                                          :key="i.name"
+                                          class="order-option-item"
+                                          :class="{ 'selected': isOptionSelected(item.name, i.name) }">
+                                        {{ i.name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="order-btn" @click="goToFormStep">Далее</button>
+                </div>
+
+                <!-- Step 2: Form -->
+                <div v-if="orderStep === 2" class="order-form-step">
+                    <h2 class="order-form-title">Оформление заказа</h2>
+                    <form @submit.prevent="submitOrder">
+                        <div class="group-input">
+                            <label for="order-name">Ваше имя</label>
+                            <input type="text" id="order-name" v-model="orderFormData.name" placeholder="Введите ваше имя" required>
+                        </div>
+                        <div class="group-input">
+                            <label for="order-phone">Ваш телефон для связи</label>
+                            <input type="tel" id="order-phone" v-model="orderFormData.phone" placeholder="Введите ваш номер телефона" required>
+                        </div>
+                        <div class="group-input">
+                            <label for="order-email">Email</label>
+                            <input type="email" id="order-email" v-model="orderFormData.email" placeholder="example@mail.ru">
+                        </div>
+                        <div class="group-input">
+                            <label for="order-address">Адрес доставки</label>
+                            <input type="text" id="order-address" v-model="orderFormData.address" placeholder="Город, улица, дом">
+                        </div>
+                        <div class="order-mini-card">
+                            <span class="mini-card-title">{{ card.title }}</span>
+                            <span class="mini-card-price">{{ totalPrice.toLocaleString() }} ₽</span>
+                        </div>
+                        <div class="group-check">
+                            <input type="checkbox" id="order-agree" v-model="orderFormData.agree" required>
+                            <label for="order-agree">Я даю согласие на обработку персональных данных</label>
+                        </div>
+                        <button type="submit" class="btn" :disabled="orderSubmitting">
+                            {{ orderSubmitting ? 'Отправка...' : 'Заказать' }}
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 3: Success -->
+                <div v-if="orderStep === 3" class="order-step order-success">
+                    <div class="success-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17L4 12" stroke="#C96744" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h2 class="order-title">Спасибо за ваше обращение</h2>
+                    <p class="order-desc">Наши менеджеры обработают ваш запрос в ближайшее время</p>
+                    <button class="order-btn" @click="goToHome">На главную</button>
+                </div>
+            </div>
         </div>
     </Teleport>
   </section>
@@ -403,14 +637,6 @@ h3 {
     color: #000000;
     font-size: 16px;
     font-weight: 600;
-}
-
-input {
-    border: 3px solid #D9D9D9;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    accent-color: #C96744;
 }
 
 .card-price {
@@ -640,5 +866,810 @@ input {
 .price.included {
     color: #888888;
     font-weight: 400;
+}
+
+h3 {
+    color: #000000;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.card-params {
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.params {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #E2E2E2;
+    padding: 20px;
+    border-radius: 4px;
+    gap: 10px;
+}
+
+.param {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #C8C8C8;
+}
+
+.param.last-param {
+    border-bottom: none;
+}
+
+.param-name, .param-value {
+    color: #000000;
+    font-size: 20px;
+    font-weight: 300;
+    opacity: 0.6;
+}
+
+.param-name {
+    width: 30%;
+}
+
+.param-value {
+    width: 70%;
+}
+
+.param-desc {
+    color: #000000;
+    font-size: 20px;
+    font-weight: 300;
+    opacity: 0.6;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .card-page {
+        padding: 160px 24px 0 24px;
+    }
+
+    h1 {
+        font-size: 36px;
+    }
+
+    .wrap-card {
+        flex-direction: column;
+    }
+
+    .wrap-images {
+        width: 100%;
+    }
+
+    .main-image {
+        min-height: 300px;
+    }
+
+    .other-images img {
+        height: 150px;
+    }
+
+    .thumbnail {
+        height: 150px;
+    }
+
+    .card-info {
+        width: 100%;
+        padding: 16px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    h3 {
+        font-size: 14px;
+    }
+
+    .item-group {
+        padding: 16px;
+        gap: 15px;
+    }
+
+    .item-name {
+        gap: 20px;
+    }
+
+    .card-price .price {
+        font-size: 42px;
+    }
+
+    .btn {
+        width: 180px;
+        padding: 16px 40px;
+    }
+
+    .params {
+        padding: 16px;
+    }
+
+    .param-name, .param-value {
+        font-size: 16px;
+    }
+
+    .param-name {
+        width: 35%;
+    }
+
+    .param-value {
+        width: 65%;
+    }
+
+    .param-desc {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-page {
+        padding: 120px 12px 0 12px;
+        gap: 30px;
+    }
+
+    .header {
+        gap: 16px;
+    }
+
+    h1 {
+        font-size: 24px;
+        line-height: 1.2;
+    }
+
+    .breadcrumbs {
+        gap: 8px;
+    }
+
+    .breadcrumbs a,
+    .breadcrumbs span:not(:last-child) {
+        font-size: 12px;
+    }
+
+    .breadcrumbs span:last-child {
+        font-size: 12px;
+    }
+
+    .wrap-card {
+        gap: 16px;
+    }
+
+    .wrap-images {
+        width: 100%;
+        gap: 12px;
+    }
+
+    .main-image {
+        min-height: 200px;
+    }
+
+    .other-images {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+    }
+
+    .other-images::-webkit-scrollbar {
+        display: none;
+    }
+
+    .other-images img {
+        width: 80px;
+        min-width: 80px;
+        height: 60px;
+    }
+
+    .thumbnail {
+        width: 80px;
+        min-width: 80px;
+        height: 60px;
+        border-width: 2px;
+    }
+
+    .card-info {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    .group {
+        gap: 10px;
+    }
+
+    h3 {
+        font-size: 14px;
+        color: #000;
+    }
+
+    .item-group {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .item-name {
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .name {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .desc {
+        font-size: 12px;
+    }
+
+    .item-price {
+        width: 100%;
+        justify-content: space-between;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .price {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .radio-circle {
+        width: 24px;
+        height: 24px;
+        border-width: 2px;
+        flex-shrink: 0;
+    }
+
+    .radio-dot {
+        width: 10px;
+        height: 10px;
+    }
+
+    .card-price {
+        padding-top: 16px;
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .card-price .price {
+        font-size: 28px;
+        text-align: center;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 16px 20px;
+        font-size: 14px;
+    }
+
+    .card-params h3 {
+        font-size: 18px;
+    }
+
+    .card-params {
+        gap: 20px;
+    }
+
+    .params {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .param {
+        flex-direction: column;
+        gap: 4px;
+        padding-bottom: 12px;
+    }
+
+    .param-name {
+        width: 100%;
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 1;
+    }
+
+    .param-value {
+        width: 100%;
+        font-size: 13px;
+        opacity: 0.8;
+        line-height: 1.4;
+    }
+
+    .param-desc {
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 12px;
+        background-color: #fff;
+        border-radius: 4px;
+    }
+
+    .fullscreen-nav {
+        width: 44px;
+        height: 44px;
+    }
+
+    .fullscreen-nav.prev {
+        left: 8px;
+    }
+
+    .fullscreen-nav.next {
+        right: 8px;
+    }
+
+    .fullscreen-close {
+        width: 40px;
+        height: 40px;
+        top: 12px;
+        right: 12px;
+    }
+
+    .fullscreen-counter {
+        font-size: 14px;
+        padding: 6px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-page {
+        padding: 100px 10px 0 10px;
+        gap: 24px;
+    }
+
+    .main-image {
+        min-height: 180px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    .card-info {
+        padding: 14px;
+    }
+
+    h2 {
+        font-size: 16px;
+    }
+
+    .item-group {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .card-price .price {
+        font-size: 24px;
+    }
+
+    .btn {
+        padding: 14px 16px;
+    }
+
+    .param-desc {
+        font-size: 12px;
+        padding: 10px;
+    }
+}
+
+/* Order Modal Styles */
+.order-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.order-modal {
+    background-color: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.order-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.order-modal-close:hover {
+    color: #000;
+}
+
+.order-step {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.order-title {
+    font-size: 44px;
+    font-weight: 400;
+    color: #000;
+    text-align: center;
+}
+
+.order-config {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-product-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E2E2E2;
+}
+
+.order-product-info h3 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #000;
+}
+
+.order-price {
+    font-size: 24px;
+    font-weight: 600;
+    color: #C96744;
+}
+
+.order-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.order-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.order-option-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+}
+
+.order-option-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.order-option-item {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background-color: #E2E2E2;
+    font-size: 14px;
+    color: #000;
+}
+
+.order-option-item.selected {
+    background-color: #C96744;
+    color: #fff;
+}
+
+.order-btn {
+    width: fit-content;
+    padding: 19px 66px;
+    border-radius: 44px;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    color: #fff;
+    background-color: #C96744;
+    transition: background-color 0.3s ease;
+}
+
+.order-btn:hover:not(:disabled) {
+    background-color: #B35A3A;
+}
+
+.order-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Order Form Step - Matching ContactPage form exactly */
+.order-form-step {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.order-form-step form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-form-title {
+    color: #000000;
+    font-weight: 400;
+    font-size: 36px;
+}
+
+.group-input {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.group-input label {
+    color: #4B4B4B;
+    font-weight: 500;
+    font-size: 24px;
+}
+
+.group-input input {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 1px solid #000000;
+    font-size: 18px;
+    font-weight: 400;
+    color: #000000;
+    outline: none;
+    background: transparent;
+}
+
+.group-input input::placeholder {
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 300;
+    font-size: 18px;
+}
+
+.group-check {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.group-check input {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #9F9F9F;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    accent-color: #C96744;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.group-check input:checked {
+    background: #C96744;
+    border-color: #C96744;
+}
+
+.group-check input:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+}
+
+.group-check label {
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 300;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.order-mini-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: #E2E2E2;
+    border-radius: 8px;
+}
+
+.mini-card-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #000;
+}
+
+.mini-card-price {
+    font-size: 20px;
+    font-weight: 600;
+    color: #C96744;
+}
+
+.order-success {
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: rgba(201, 103, 68, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.order-desc {
+    font-size: 18px;
+    color: rgba(0, 0, 0, 0.6);
+    line-height: 1.6;
+    opacity: 0.8;
+}
+
+/* Responsive for order modal */
+@media (max-width: 768px) {
+    .order-modal {
+        padding: 30px 20px;
+        border-radius: 12px;
+    }
+
+    .order-title {
+        font-size: 24px;
+    }
+
+    .order-product-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .order-price {
+        font-size: 20px;
+    }
+
+    .order-btn {
+        padding: 16px 30px;
+        width: 100%;
+    }
+
+    .order-form-title {
+        font-size: 24px;
+    }
+
+    .group-input label {
+        font-size: 18px;
+    }
+
+    .group-input input {
+        font-size: 16px;
+        padding: 8px 0;
+    }
+
+    .group-input input::placeholder {
+        font-size: 16px;
+    }
+
+    .group-check input {
+        width: 28px;
+        height: 28px;
+    }
+
+    .group-check label {
+        font-size: 14px;
+    }
+
+    .order-mini-card {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-modal {
+        padding: 24px 16px;
+    }
+
+    .order-title {
+        font-size: 20px;
+    }
+
+    .order-product-info h3 {
+        font-size: 16px;
+    }
+
+    .order-price {
+        font-size: 18px;
+    }
+
+    .order-option-item {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .order-btn {
+        padding: 14px 20px;
+    }
+
+    .order-form-title {
+        font-size: 20px;
+    }
+
+    .group-input label {
+        font-size: 16px;
+    }
+
+    .group-input input {
+        font-size: 14px;
+    }
+
+    .group-input input::placeholder {
+        font-size: 14px;
+    }
+
+    .group-check input {
+        width: 24px;
+        height: 24px;
+    }
+
+    .group-check label {
+        font-size: 12px;
+    }
+
+    .mini-card-title {
+        font-size: 14px;
+    }
+
+    .mini-card-price {
+        font-size: 16px;
+    }
+
+    .order-desc {
+        font-size: 14px;
+    }
 }
 </style>

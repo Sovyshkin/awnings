@@ -118,8 +118,13 @@ $categories = get_terms(array(
                 </div>
                 
                 <div class="wpa-form-group">
-                    <label for="product-price">Цена</label>
-                    <input type="text" id="product-price" class="wpa-form-input" placeholder="от 126 000 ₽">
+                    <label for="product-base-price">Базовая цена (для расчёта комплекта)</label>
+                    <input type="text" id="product-base-price" class="wpa-form-input" placeholder="189000">
+                </div>
+                
+                <div class="wpa-form-group">
+                    <label for="product-price">Цена отображаемая</label>
+                    <input type="text" id="product-price" class="wpa-form-input" placeholder="от 189 000 ₽">
                 </div>
                 
                 <div class="wpa-form-group">
@@ -145,8 +150,42 @@ $categories = get_terms(array(
                 </div>
                 
                 <div class="wpa-form-group">
-                    <label for="product-content">Описание</label>
-                    <textarea id="product-content" class="wpa-form-input wpa-form-textarea" placeholder="Описание товара..."></textarea>
+                    <label for="product-content">Краткое описание</label>
+                    <textarea id="product-content" class="wpa-form-input wpa-form-textarea" placeholder="Краткое описание товара..."></textarea>
+                </div>
+                
+                <div class="wpa-form-group">
+                    <label for="product-desc">Полное описание</label>
+                    <textarea id="product-desc" class="wpa-form-input wpa-form-textarea" style="min-height: 150px;" placeholder="Полное описание модели, которое отображается под характеристиками..."></textarea>
+                </div>
+                
+                <div class="wpa-form-group">
+                    <label>Характеристики (параметры)</label>
+                    <div id="params-container">
+                        <div class="param-item" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" class="wpa-form-input param-name" placeholder="Название (например: Ширина)" style="flex: 1;">
+                            <input type="text" class="wpa-form-input param-value" placeholder="Значение (например: 6 м.)" style="flex: 1;">
+                        </div>
+                    </div>
+                    <button type="button" id="add-param-btn" class="wpa-btn" style="padding: 8px 16px; font-size: 12px; margin-top: 8px;">+ Добавить характеристику</button>
+                </div>
+                
+                <div class="wpa-form-group">
+                    <label>Конфигуратор (пакеты опций)</label>
+                    <div id="config-container">
+                        <div class="config-group" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 6px;">
+                            <input type="text" class="wpa-form-input config-group-name" placeholder="Название группы (например: Основа)" style="margin-bottom: 10px;">
+                            <div class="config-items-container">
+                                <div class="config-item" style="display: flex; gap: 10px; margin-bottom: 8px;">
+                                    <input type="text" class="wpa-form-input config-item-name" placeholder="Название пакета" style="flex: 1;">
+                                    <input type="text" class="wpa-form-input config-item-desc" placeholder="Описание" style="flex: 1;">
+                                    <input type="text" class="wpa-form-input config-item-price" placeholder="Цена" style="width: 100px;">
+                                </div>
+                            </div>
+                            <button type="button" class="add-config-item-btn wpa-btn" style="padding: 6px 12px; font-size: 11px; margin-top: 8px;">+ Добавить пакет</button>
+                        </div>
+                    </div>
+                    <button type="button" id="add-config-group-btn" class="wpa-btn" style="padding: 8px 16px; font-size: 12px; margin-top: 8px;">+ Добавить группу</button>
                 </div>
             </div>
             <div class="wpa-form-footer">
@@ -274,9 +313,11 @@ $categories = get_terms(array(
     function openModal(product = null) {
         document.getElementById('product-id').value = product ? product.id : '';
         document.getElementById('product-title').value = product ? product.title : '';
+        document.getElementById('product-base-price').value = product ? (product.base_price || '') : '';
         document.getElementById('product-price').value = product ? (product.price || '') : '';
         document.getElementById('product-category').value = product ? (product.category_id || '') : '';
         document.getElementById('product-content').value = product ? (product.content || '') : '';
+        document.getElementById('product-desc').value = product ? (product.desc || '') : '';
         
         // Load images
         if (product && product.image_url) {
@@ -286,8 +327,125 @@ $categories = get_terms(array(
         }
         renderGallery();
         
+        // Load params
+        loadParams(product ? product.params : []);
+        
+        // Load config
+        loadConfig(product ? product.config : []);
+        
         modalTitle.textContent = product ? 'Редактировать товар' : 'Новый товар';
         modal.classList.add('active');
+    }
+    
+    // Load params into form
+    function loadParams(params) {
+        const container = document.getElementById('params-container');
+        container.innerHTML = '';
+        
+        if (params && params.length > 0) {
+            params.forEach(p => {
+                addParamRow(p.name, p.value);
+            });
+        } else {
+            addParamRow();
+        }
+    }
+    
+    // Add param row
+    function addParamRow(name, value) {
+        const container = document.getElementById('params-container');
+        const div = document.createElement('div');
+        div.className = 'param-item';
+        div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px;';
+        div.innerHTML = `
+            <input type="text" class="wpa-form-input param-name" placeholder="Название (например: Ширина)" style="flex: 1;" value="${escapeHtml(name || '')}">
+            <input type="text" class="wpa-form-input param-value" placeholder="Значение (например: 6 м.)" style="flex: 1;" value="${escapeHtml(value || '')}">
+            <button type="button" class="wpa-btn remove-param-btn" style="padding: 8px 12px; background: #dc3232; font-size: 12px;">×</button>
+        `;
+        
+        div.querySelector('.remove-param-btn').addEventListener('click', () => {
+            div.remove();
+        });
+        
+        container.appendChild(div);
+    }
+    
+    // Load config into form
+    function loadConfig(config) {
+        const container = document.getElementById('config-container');
+        container.innerHTML = '';
+        
+        if (config && config.length > 0) {
+            config.forEach(group => {
+                addConfigGroup(group.name, group.items);
+            });
+        } else {
+            addConfigGroup();
+        }
+    }
+    
+    // Add config group
+    function addConfigGroup(name, items) {
+        const container = document.getElementById('config-container');
+        const div = document.createElement('div');
+        div.className = 'config-group';
+        div.style.cssText = 'margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 6px;';
+        
+        let itemsHtml = '';
+        if (items && items.length > 0) {
+            items.forEach(item => {
+                itemsHtml += `
+                    <div class="config-item" style="display: flex; gap: 10px; margin-bottom: 8px;">
+                        <input type="text" class="wpa-form-input config-item-name" placeholder="Название пакета" style="flex: 1;" value="${escapeHtml(item.name || '')}">
+                        <input type="text" class="wpa-form-input config-item-desc" placeholder="Описание" style="flex: 1;" value="${escapeHtml(item.desc || '')}">
+                        <input type="text" class="wpa-form-input config-item-price" placeholder="Цена" style="width: 100px;" value="${escapeHtml(item.price || '')}">
+                        <button type="button" class="wpa-btn remove-config-item-btn" style="padding: 8px 12px; background: #dc3232; font-size: 12px;">×</button>
+                    </div>
+                `;
+            });
+        } else {
+            itemsHtml = `
+                <div class="config-item" style="display: flex; gap: 10px; margin-bottom: 8px;">
+                    <input type="text" class="wpa-form-input config-item-name" placeholder="Название пакета" style="flex: 1;">
+                    <input type="text" class="wpa-form-input config-item-desc" placeholder="Описание" style="flex: 1;">
+                    <input type="text" class="wpa-form-input config-item-price" placeholder="Цена" style="width: 100px;">
+                    <button type="button" class="wpa-btn remove-config-item-btn" style="padding: 8px 12px; background: #dc3232; font-size: 12px;">×</button>
+                </div>
+            `;
+        }
+        
+        div.innerHTML = `
+            <input type="text" class="wpa-form-input config-group-name" placeholder="Название группы (например: Основа)" style="margin-bottom: 10px;" value="${escapeHtml(name || '')}">
+            <div class="config-items-container">${itemsHtml}</div>
+            <button type="button" class="add-config-item-btn wpa-btn" style="padding: 6px 12px; font-size: 11px; margin-top: 8px;">+ Добавить пакет</button>
+            <button type="button" class="wpa-btn remove-config-group-btn" style="padding: 6px 12px; font-size: 11px; margin-top: 8px; background: #dc3232; margin-left: 8px;">× Удалить группу</button>
+        `;
+        
+        // Add config item button
+        div.querySelector('.add-config-item-btn').addEventListener('click', () => {
+            const itemsContainer = div.querySelector('.config-items-container');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'config-item';
+            itemDiv.style.cssText = 'display: flex; gap: 10px; margin-bottom: 8px;';
+            itemDiv.innerHTML = `
+                <input type="text" class="wpa-form-input config-item-name" placeholder="Название пакета" style="flex: 1;">
+                <input type="text" class="wpa-form-input config-item-desc" placeholder="Описание" style="flex: 1;">
+                <input type="text" class="wpa-form-input config-item-price" placeholder="Цена" style="width: 100px;">
+                <button type="button" class="wpa-btn remove-config-item-btn" style="padding: 8px 12px; background: #dc3232; font-size: 12px;">×</button>
+            `;
+            itemDiv.querySelector('.remove-config-item-btn').addEventListener('click', () => itemDiv.remove());
+            itemsContainer.appendChild(itemDiv);
+        });
+        
+        // Remove config item buttons
+        div.querySelectorAll('.remove-config-item-btn').forEach(btn => {
+            btn.addEventListener('click', () => btn.closest('.config-item').remove());
+        });
+        
+        // Remove config group button
+        div.querySelector('.remove-config-group-btn').addEventListener('click', () => div.remove());
+        
+        container.appendChild(div);
     }
     
     // Close modal
@@ -477,6 +635,47 @@ $categories = get_terms(array(
         }
     });
     
+    // Collect params from form
+    function collectParams() {
+        const params = [];
+        document.querySelectorAll('#params-container .param-item').forEach(item => {
+            const name = item.querySelector('.param-name').value.trim();
+            const value = item.querySelector('.param-value').value.trim();
+            if (name && value) {
+                params.push({ name, value });
+            }
+        });
+        return params;
+    }
+    
+    // Collect config from form
+    function collectConfig() {
+        const config = [];
+        document.querySelectorAll('#config-container .config-group').forEach(group => {
+            const groupName = group.querySelector('.config-group-name').value.trim();
+            if (!groupName) return;
+            
+            const items = [];
+            group.querySelectorAll('.config-item').forEach(item => {
+                const itemName = item.querySelector('.config-item-name').value.trim();
+                const itemDesc = item.querySelector('.config-item-desc').value.trim();
+                const itemPrice = item.querySelector('.config-item-price').value.trim();
+                if (itemName) {
+                    items.push({
+                        name: itemName,
+                        desc: itemDesc,
+                        price: itemPrice ? parseInt(itemPrice) || 0 : 0
+                    });
+                }
+            });
+            
+            if (items.length > 0) {
+                config.push({ name: groupName, items });
+            }
+        });
+        return config;
+    }
+    
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -484,9 +683,13 @@ $categories = get_terms(array(
         const data = {
             title: document.getElementById('product-title').value.trim(),
             price: document.getElementById('product-price').value,
+            base_price: document.getElementById('product-base-price').value,
             category_id: document.getElementById('product-category').value,
             image_url: images,
-            content: document.getElementById('product-content').value
+            content: document.getElementById('product-content').value,
+            desc: document.getElementById('product-desc').value,
+            params: collectParams(),
+            config: collectConfig()
         };
         
         if (!data.title) {
@@ -496,6 +699,12 @@ $categories = get_terms(array(
         
         saveProduct(data, id);
     });
+    
+    // Add param button
+    document.getElementById('add-param-btn').addEventListener('click', () => addParamRow());
+    
+    // Add config group button
+    document.getElementById('add-config-group-btn').addEventListener('click', () => addConfigGroup());
     
     // Escape key closes modal
     document.addEventListener('keydown', (e) => {
