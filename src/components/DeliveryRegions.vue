@@ -1,30 +1,65 @@
 <template>
-    <section class="delivery-regions">
+    <section class="delivery-regions" :style="sectionStyle">
         <div class="wrap-title">
-            <h1>Регионы доставки</h1>
-            <p class="subtitle">Осуществляем доставку и установку по всей территории России</p>
+            <h1>{{ regionData.block_title || 'Регионы доставки' }}</h1>
+            <p class="subtitle">{{ regionData.block_text || 'Осуществляем доставку и установку по всей территории России' }}</p>
         </div>
         <ul class="regions">
-            <li class="region" v-for="region in regions" :key="region">{{ region }}</li>
+            <li class="region" v-for="(region, index) in regions" :key="index">{{ region }}</li>
         </ul>
     </section>
 </template>
 
 <script setup>
-const regions = [
-    'Московская область',
-    'Краснодарский край',
-    'Воронежская область',
-    'Ростовская область',
-    'Ленинградская область',
-    'Свердловская область',
-    'Волгоградская область',
-    'Тульская область',
-    'Республика Татарстан',
-    'Новосибирская область',
-    'Нижегородская область',
-    'Тверская область'
-]
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+
+const regionData = ref({
+    block_title: '',
+    block_text: '',
+    block_image: ''
+})
+
+const regions = ref([])
+const sectionStyle = ref({})
+
+function resolveImagePath(path) {
+    if (!path) return ''
+    if (path.startsWith('http') || path.startsWith('/')) return path
+    return ''
+}
+
+async function loadRegionsData() {
+    const blocks = await fetchContentBlocks('delivery')
+    const regionsBlock = blocks.find(b => (b.block_name || '').includes('Регионы')) ||
+        blocks.find(b => b.block_type === 'regions')
+    if (regionsBlock) {
+        regionData.value.block_title = regionsBlock.block_title || ''
+        regionData.value.block_text = regionsBlock.block_text || ''
+        regionData.value.block_image = regionsBlock.block_image || ''
+        const bg = resolveImagePath(regionData.value.block_image)
+        if (bg) {
+            sectionStyle.value = { '--regions-bg': `url("${bg}")` }
+        }
+        if (regionsBlock.block_data) {
+            let data = regionsBlock.block_data
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data)
+                } catch (e) {
+                    return
+                }
+            }
+            if (Array.isArray(data)) {
+                regions.value = data
+            }
+        }
+    }
+}
+
+onMounted(() => {
+    loadRegionsData()
+})
 </script>
 
 <style scoped>
@@ -44,7 +79,7 @@ const regions = [
     transform: translateY(-50%);
     width: 700px;
     height: 700px;
-    background: url('../assets/delivery-regions.png') center/contain no-repeat;
+    background: var(--regions-bg, url('../assets/delivery-regions.png')) center/contain no-repeat;
     pointer-events: none;
     z-index: -1;
 }

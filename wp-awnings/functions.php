@@ -773,13 +773,7 @@ add_action('rest_api_init', 'wp_awnings_cors_headers', 15);
 function wp_awnings_register_content_routes() {
     $namespace = 'wp-awnings/v1';
 
-    register_rest_route($namespace, '/content-blocks/page/(?P<page>[^/]+)', array(
-        'methods' => 'GET',
-        'callback' => 'wp_awnings_get_content_blocks',
-        'permission_callback' => '__return_true',
-    ));
-    
-    // Also keep simple endpoint for default page
+    // Content blocks with page filter (must be registered first)
     register_rest_route($namespace, '/content-blocks', array(
         'methods' => 'GET',
         'callback' => 'wp_awnings_get_content_blocks',
@@ -798,7 +792,7 @@ function wp_awnings_register_content_routes() {
         'methods' => array('PUT', 'POST'),
         'callback' => 'wp_awnings_update_content_block',
         'permission_callback' => function() {
-            return current_user_can('edit_posts');
+            return current_user_can('manage_options');
         },
     ));
 

@@ -1,17 +1,64 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { fetchContentBlocks } from '../services/api'
+import cardImage from '../assets/card.png'
 
 const router = useRouter()
+const sectionTitle = ref('Наши проекты')
+const cards = ref([
+  { image: cardImage, title: 'Беседка 6м2', price: '126 000' },
+  { image: cardImage, title: 'Мангальная зона Стандарт', price: '126 000' },
+  { image: cardImage, title: 'Навес для автомобиля 6м2', price: '126 000' }
+])
 
 const goToCard = (index) => {
   router.push({ name: 'card', params: { id: index } })
 }
+
+function getImageUrl(imagePath) {
+  if (!imagePath) return cardImage
+  if (imagePath.startsWith('http')) return imagePath
+  if (imagePath.startsWith('/')) return imagePath
+  return `/wp-content/themes/wp-awnings/assets/${imagePath.split('/').pop()}`
+}
+
+async function loadOurProjectsData() {
+  const blocks = await fetchContentBlocks('home')
+  const projectsBlock = blocks.find(b => b.block_type === 'gallery' && b.block_name === 'Наши проекты')
+  if (projectsBlock) {
+    if (projectsBlock.block_title) {
+      sectionTitle.value = projectsBlock.block_title
+    }
+    if (projectsBlock.block_data) {
+      let data = projectsBlock.block_data
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data)
+        } catch (e) {
+          return
+        }
+      }
+      if (Array.isArray(data) && data.length > 0) {
+        cards.value = data.map(card => ({
+          image: card.image ? getImageUrl(card.image) : cardImage,
+          title: card.title || '',
+          price: card.price || ''
+        }))
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  loadOurProjectsData()
+})
 </script>
 
 <template>
   <section class="how-work">
     <div class="wrap-title">
-      <h2>Наши проекты</h2>
+      <h2>{{ sectionTitle }}</h2>
       <div class="actions">
         <button class="btn arrow-left" @click="prevStep">
           <img src="../assets/arrow-left.svg" alt="" />
@@ -22,29 +69,13 @@ const goToCard = (index) => {
       </div>
     </div>
       <div class="cards">
-        <div class="card">
+        <div v-for="(card, index) in cards" :key="index" class="card">
           <div class="wrap-img">
-            <img src="../assets/card.png" alt="" />
+            <img :src="card.image" alt="" />
           </div>
-          <span class="card-title">Беседка 6м2</span>
-          <span class="card-price">от 126 000 ₽</span>
-          <button class="card-btn" @click="goToCard(1)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
-        </div>
-        <div class="card">
-          <div class="wrap-img">
-            <img src="../assets/card.png" alt="" />
-          </div>
-          <span class="card-title">Мангальная зона Стандарт</span>
-          <span class="card-price">от 126 000 ₽</span>
-          <button class="card-btn" @click="goToCard(2)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
-        </div>
-        <div class="card">
-          <div class="wrap-img">
-            <img src="../assets/card.png" alt="" />
-          </div>
-          <span class="card-title">Навес для автомобиля 6м2</span>
-          <span class="card-price">от 126 000 ₽</span>
-          <button class="card-btn" @click="goToCard(3)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
+          <span class="card-title">{{ card.title }}</span>
+          <span class="card-price">от {{ card.price }} ₽</span>
+          <button class="card-btn" @click="goToCard(index + 1)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
         </div>
       </div>
       <div class="wrap-catalog">

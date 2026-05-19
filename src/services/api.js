@@ -6,6 +6,26 @@
 // Configure your WordPress site URL here
 const WP_API_URL = import.meta.env.VITE_WP_API_URL || 'http://localhost/vip-flot/index.php?rest_route=/wp-awnings/v1'
 
+function buildApiUrl(endpoint, params = {}) {
+  const cleanEndpoint = String(endpoint || '').replace(/^\/+/, '')
+  const hasRestRoute = WP_API_URL.includes('rest_route=')
+
+  if (hasRestRoute) {
+    const [base, query = ''] = WP_API_URL.split('?')
+    const search = new URLSearchParams(query)
+    const restRoute = search.get('rest_route') || '/wp-awnings/v1'
+    const normalizedRoute = `${restRoute.replace(/\/+$/, '')}/${cleanEndpoint}`
+    search.set('rest_route', normalizedRoute)
+    Object.entries(params).forEach(([k, v]) => search.set(k, String(v)))
+    return `${base}?${search.toString()}`
+  }
+
+  const sep = WP_API_URL.endsWith('/') ? '' : '/'
+  const url = new URL(`${WP_API_URL}${sep}${cleanEndpoint}`)
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)))
+  return url.toString()
+}
+
 /**
  * Fetch products from WordPress
  * @param {string} category - Filter by category slug (empty means all)
@@ -108,13 +128,21 @@ export async function submitLead(data) {
 // Fetch content blocks from WordPress
 export async function fetchContentBlocks(page = 'home') {
   try {
-    const response = await fetch(`${WP_API_URL}/content-blocks/page/${encodeURIComponent(page)}`)
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    const urls = [
+      buildApiUrl('content-blocks/public', { page }),
+      buildApiUrl('content-blocks', { page })
+    ]
+
+    let lastError = null
+    for (const url of urls) {
+      const response = await fetch(url)
+      if (response.ok) {
+        return await response.json()
+      }
+      lastError = new Error(`HTTP error! status: ${response.status} for ${url}`)
     }
-    
-    return await response.json()
+
+    throw lastError || new Error('Failed to fetch content blocks')
   } catch (error) {
     console.error('Error fetching content blocks:', error)
     return []

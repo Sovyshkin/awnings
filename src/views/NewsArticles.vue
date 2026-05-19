@@ -1,10 +1,21 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { fetchContentBlocks } from '../services/api'
+import defaultImage from '../assets/company-card-1.png'
 
 const router = useRouter()
 const visibleCount = ref(9)
-const totalCards = 20
+const totalCards = ref(0)
+const pageTitle = ref('Новости и статьи')
+const pageSubtitle = ref('Полезная информация о навесах, материалах и уходе')
+const cards = ref([])
+
+function resolveImage(path) {
+  if (!path) return defaultImage
+  if (path.startsWith('http') || path.startsWith('/')) return path
+  return `/wp-content/themes/wp-awnings/assets/${path.split('/').pop()}`
+}
 
 function showMore() {
   visibleCount.value += 9
@@ -13,6 +24,38 @@ function showMore() {
 function goToArticle(id) {
   router.push(`/news-articles/${id}`)
 }
+
+async function loadNews() {
+  const blocks = await fetchContentBlocks('news')
+  const header = blocks.find(b => (b.block_name || '').includes('Заголовок')) || blocks.find(b => b.block_type === 'section')
+  if (header) {
+    if (header.block_title) pageTitle.value = header.block_title
+    if (header.block_text) pageSubtitle.value = header.block_text
+  }
+
+  const cardsBlock = blocks.find(b => b.block_type === 'news-cards') || blocks.find(b => (b.block_name || '').includes('Карточки'))
+  if (cardsBlock && cardsBlock.block_data) {
+    let data = cardsBlock.block_data
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data) } catch (e) { data = [] }
+    }
+    if (Array.isArray(data)) {
+      cards.value = data.map((item, idx) => ({
+        id: idx + 1,
+        title: item.title || '',
+        description: item.description || '',
+        date: item.date || '',
+        image: resolveImage(item.image),
+        link: item.link || `/news-articles/${idx + 1}`
+      }))
+      totalCards.value = cards.value.length
+    }
+  }
+}
+
+onMounted(() => {
+  loadNews()
+})
 </script>
 
 <template>
@@ -23,22 +66,18 @@ function goToArticle(id) {
         <span>/</span>
         <router-link to="/news-articles">Новости и статьи</router-link>
       </div>
-      <h1>Новости и статьи</h1>
-      <p>
-        Полезная информация о навесах, материалах и уходе
-      </p>
+      <h1>{{ pageTitle }}</h1>
+      <p>{{ pageSubtitle }}</p>
     </div>
     <div class="cards">
-      <div class="card" v-for="n in visibleCount" :key="n" @click="goToArticle(n)">
+      <div class="card" v-for="item in cards.slice(0, visibleCount)" :key="item.id" @click="goToArticle(item.id)">
         <div class="wrap-img">
-          <img src="../assets/company-card-1.png" alt="">
+          <img :src="item.image" alt="">
         </div>
         <div class="card-text">
-          <span class="card-title">Уход за металлическим навесом: советы по обслуживанию</span>
-          <p class="card-description">
-            Регулярный уход продлевает жизнь навеса. Узнайте, как правильно чистить и обслуживать конструкцию.
-          </p>
-          <span class="card-date">15 марта 2025 г.</span>
+          <span class="card-title">{{ item.title }}</span>
+          <p class="card-description">{{ item.description }}</p>
+          <span class="card-date">{{ item.date }}</span>
         </div>
       </div>
     </div>

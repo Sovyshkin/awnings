@@ -2,11 +2,11 @@
 
 <template>
     <section class="why-choose-us">
-<h1>Практичность, современный вид и продуманная функция.</h1>
+<h1>{{ sectionHeading }}</h1>
         <div class="wrap-content">
             <div class="text">
-                <h2>Почему вы выбираете нас?</h2>
-                <p>Быстрые сроки и высокое качество работы, а так же конфигуратор моделей под любой бюджет</p>
+                <h2>{{ sectionTitle }}</h2>
+                <p>{{ sectionSubtitle }}</p>
             </div>
             <div class="cards">
                 <div v-for="(card, index) in whyUsCards" :key="index" class="card">
@@ -32,6 +32,9 @@ import whyUs3 from '../assets/why-us-3.svg'
 import whyUs4 from '../assets/why-us-4.svg'
 
 const whyUsCards = ref([])
+const sectionHeading = ref('Практичность, современный вид и продуманная функция.')
+const sectionTitle = ref('Почему вы выбираете нас?')
+const sectionSubtitle = ref('Быстрые сроки и высокое качество работы, а так же конфигуратор моделей под любой бюджет')
 
 const iconMap = {
   'why-us-1': whyUs1,
@@ -49,12 +52,25 @@ const iconMap = {
 }
 
 function getIconPath(iconName) {
+  if (!iconName) return whyUs1
+  if (iconName.startsWith('http') || iconName.startsWith('/')) return iconName
   return iconMap[iconName] || whyUs1
 }
 
 async function loadWhyUsData() {
   const blocks = await fetchContentBlocks('home')
   const whyUsBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Почему выбирают нас')
+  if (whyUsBlock) {
+    if (whyUsBlock.block_title) {
+      sectionHeading.value = whyUsBlock.block_title
+    }
+    if (whyUsBlock.block_name) {
+      sectionTitle.value = whyUsBlock.block_name
+    }
+    if (whyUsBlock.block_text) {
+      sectionSubtitle.value = whyUsBlock.block_text
+    }
+  }
   if (whyUsBlock && whyUsBlock.block_data) {
     let data = whyUsBlock.block_data
     if (typeof data === 'string') {
@@ -64,7 +80,13 @@ async function loadWhyUsData() {
         return
       }
     }
-    whyUsCards.value = data
+    if (data && !Array.isArray(data) && data.section_heading) {
+      sectionHeading.value = data.section_heading
+    }
+    const cardsData = Array.isArray(data) ? data : (Array.isArray(data?.cards) ? data.cards : [])
+    if (cardsData.length) {
+      whyUsCards.value = cardsData
+    }
   }
 }
 

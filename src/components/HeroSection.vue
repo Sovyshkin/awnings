@@ -1,5 +1,5 @@
 <template>
-  <section class="hero-section">
+  <section class="hero-section" :style="heroStyle">
     <h1 class="title">{{ heroData.block_title || 'Современные модульные решения для участка в едином стиле' }}</h1>
     <div class="main-content">
       <div class="list-group">
@@ -30,8 +30,11 @@ import group3 from '../assets/group-3.svg'
 const heroData = ref({
   block_title: '',
   block_text: '',
-  block_data: null
+  block_data: null,
+  block_image: ''
 })
+const externalFeatures = ref([])
+const heroStyle = ref({})
 
 const iconMap = {
   'group-1': group1,
@@ -43,6 +46,9 @@ const iconMap = {
 }
 
 const heroFeatures = computed(() => {
+  if (externalFeatures.value.length) {
+    return externalFeatures.value
+  }
   if (heroData.value.block_data) {
     let data = heroData.value.block_data
     if (typeof data === 'string') {
@@ -88,14 +94,37 @@ const heroButtonLink = computed(() => {
 })
 
 function getIconPath(iconName) {
+  if (!iconName) return group1
+  if (iconName.startsWith('http') || iconName.startsWith('/')) return iconName
   return iconMap[iconName] || group1
 }
 
 async function loadHeroData() {
   const blocks = await fetchContentBlocks('home')
   const heroBlock = blocks.find(b => b.block_type === 'hero')
+  const featuresBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Преимущества')
   if (heroBlock) {
     heroData.value = heroBlock
+    if (heroBlock.block_image) {
+      const img = heroBlock.block_image
+      if (img.startsWith('http') || img.startsWith('/')) {
+        heroStyle.value = { backgroundImage: `url("${img}")` }
+      }
+    }
+  }
+
+  if (featuresBlock && featuresBlock.block_data) {
+    let data = featuresBlock.block_data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        data = []
+      }
+    }
+    if (Array.isArray(data)) {
+      externalFeatures.value = data
+    }
   }
 }
 

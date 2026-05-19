@@ -2,7 +2,7 @@
   <section class="company-numbers">
     <h2>Компания в цифрах</h2>
     <div class="cards">
-      <div v-for="(card, index) in cards" :key="index" class="card">
+      <div v-for="(card, index) in cards" :key="index" class="card" :style="cardStyle(card, index)">
         <div class="card-wrap-title">
           <span class="card-title">{{ card.title }}</span>
           <div class="card-rectangle"></div>
@@ -17,26 +17,74 @@
 </template>
 
 <script setup>
-const cards = [
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+import companyCard1 from '../assets/company-card-1.png'
+import companyCard2 from '../assets/company-card-2.png'
+import companyCard3 from '../assets/company-card-3.jpg'
+
+const cards = ref([
   {
     title: '15',
     subtitle: 'лет на рынке',
     desc: 'проектируем и устанавливаем конструкции, которые выдерживают реальные условия эксплуатации',
-    image: 'company-card-1.png'
+    image: companyCard1
   },
   {
     title: '3 200+',
     subtitle: 'установленных навесов',
     desc: 'Отработали десятки сценариев: частные участки, коммерческие объекты, нестандартные решения',
-    image: 'company-card-2.png'
+    image: companyCard2
   },
   {
     title: '52',
     subtitle: 'города доставки',
     desc: 'Организуем логистику и монтаж так, чтобы вы получили готовый результат без срывов и "по месту разберёмся"',
-    image: 'company-card-3.jpg'
+    image: companyCard3
   }
-]
+])
+
+const cardImages = [companyCard1, companyCard2, companyCard3]
+
+function getImageUrl(imagePath, fallback) {
+  if (!imagePath) return fallback
+  if (imagePath.startsWith('http')) return imagePath
+  if (imagePath.startsWith('/')) return imagePath
+  return fallback
+}
+
+function cardStyle(card, index) {
+  return {
+    backgroundImage: `url("${card.image || cardImages[index] || cardImages[0]}")`
+  }
+}
+
+async function loadCompanyNumbersData() {
+  const blocks = await fetchContentBlocks('home')
+  const numbersBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Компания в цифрах')
+  if (numbersBlock && numbersBlock.block_data) {
+    let data = numbersBlock.block_data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        return
+      }
+    }
+    if (Array.isArray(data) && data.length > 0) {
+      cards.value = data.map((card, index) => ({
+        title: card.title || '',
+        subtitle: card.subtitle || '',
+        desc: card.desc || '',
+        image: card.image ? getImageUrl(card.image, cardImages[index] || cardImages[0]) : cardImages[index] || cardImages[0]
+      }))
+    }
+  }
+}
+
+onMounted(() => {
+  loadCompanyNumbersData()
+})
 </script>
 
 <style scoped>
@@ -159,16 +207,6 @@ h2 {
   font-size: 16px;
   font-weight: 300;
   opacity: 0.8;
-}
-
-.card:nth-child(1) {
-  background-image: url("../assets/company-card-1.png");
-}
-.card:nth-child(2) {
-  background-image: url("../assets/company-card-2.png");
-}
-.card:nth-child(3) {
-  background-image: url("../assets/company-card-3.jpg");
 }
 
 @media (max-width: 1200px) {

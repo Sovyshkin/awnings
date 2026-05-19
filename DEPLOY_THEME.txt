@@ -1,0 +1,39 @@
+=== ДЕПЛОЙ ТЕМЫ WORDPRESS ===
+
+--- ЛОКАЛЬНО (своя машина) ---
+
+1. Запаковать тему в ZIP:
+   cd /Users/vadim/Desktop/awnings
+   zip -r wp-awnings-theme.zip wp-awnings/
+
+2. Или скопировать всю папку напрямую:
+   cp -r wp-awnings/ /путь/к/wordpress/wp-content/themes/
+
+--- НА СЕРВЕРЕ ---
+
+1. Обновить код из Git:
+   cd /var/www/awnings
+   git pull origin main
+
+2. Скопировать всю тему WordPress:
+   cp -r /var/www/awnings/wp-awnings/* /var/www/wordpress/wp-content/themes/wp-awnings/
+
+3. Или через rsync (быстрее для больших файлов):
+   rsync -av /var/www/awnings/wp-awnings/ /var/www/wordpress/wp-content/themes/wp-awnings/
+
+4. Установить права:
+   sudo chown -R www-data:www-data /var/www/wordpress/wp-content/themes/wp-awnings/
+   sudo chmod -R 755 /var/www/wordpress/wp-content/themes/wp-awnings/
+
+5. Проверить структуру:
+   ls -la /var/www/wordpress/wp-content/themes/wp-awnings/
+
+=== АКТИВАЦИЯ ТЕМЫ ===
+
+Через wp-admin:
+1. Открой http://194.226.165.117/wp-admin
+2. Внешний вид → Темы
+3. Найди "wp-awnings" и нажми "Активировать"
+
+Через консоль (если тема уже активна, она обновится автоматически):
+   wp theme activate wp-awnings --path=/var/www/wordpress

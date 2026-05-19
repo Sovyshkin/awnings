@@ -1,7 +1,7 @@
 <template>
   <section class="how-work">
     <div class="wrap-title">
-      <h2>Как происходит доставка</h2>
+      <h2>{{ sectionTitle }}</h2>
       <div class="actions">
         <button class="btn arrow-left" @click="prevStep">
           <img src="../assets/arrow-left.svg" alt="" />
@@ -22,48 +22,13 @@
         :class="{ 'cards-mobile': !isDesktop }"
         :style="isDesktop ? { transform: `translateX(-${cardOffset}px)` } : {}"
       >
-        <div class="card">
+        <div v-for="(card, index) in deliveryCards" :key="index" class="card">
           <div class="card-text">
-            <span class="card-title">Оформление заказа</span>
-            <p class="card-desc">
-              Выбираете товары и оставляете заявку
-            </p>
+            <span class="card-title">{{ card.title }}</span>
+            <p class="card-desc">{{ card.text }}</p>
           </div>
           <div class="wrap-icon">
-            <img src="../assets/card-icon-1.svg" alt="" class="icon" />
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-text">
-            <span class="card-title">Подтверждение</span>
-            <p class="card-desc">
-              Менеджер связывается для уточнения
-            </p>
-          </div>
-          <div class="wrap-icon">
-            <img src="../assets/card-icon-2.svg" alt="" class="icon" />
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-text">
-            <span class="card-title">Производство</span>
-            <p class="card-desc">
-              Изготавливаем изделие под ваш заказ
-            </p>
-          </div>
-          <div class="wrap-icon">
-            <img src="../assets/card-icon-3.svg" alt="" class="icon" />
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-text">
-            <span class="card-title">Производство</span>
-            <p class="card-desc">
-              Изготавливаем изделие под ваш заказ
-            </p>
-          </div>
-          <div class="wrap-icon">
-            <img src="../assets/card-icon-3.svg" alt="" class="icon" />
+            <img :src="getIconPath(card.icon)" alt="" class="icon" />
           </div>
         </div>
       </div>
@@ -88,6 +53,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
+import cardIcon1 from '../assets/card-icon-1.svg'
+import cardIcon2 from '../assets/card-icon-2.svg'
+import cardIcon3 from '../assets/card-icon-3.svg'
 
 const props = defineProps({
   isMobile: {
@@ -96,8 +65,11 @@ const props = defineProps({
   }
 })
 
+const sectionTitle = ref('Как происходит доставка')
+const deliveryCards = ref([])
+
 const activeStep = ref(1)
-const totalSteps = 4
+const totalSteps = ref(4)
 const cardsContainer = ref(null)
 
 const cardWidth = 440
@@ -106,6 +78,41 @@ const cardGap = 20
 const cardOffset = computed(() => (activeStep.value - 1) * (cardWidth + cardGap))
 
 const isDesktop = computed(() => !props.isMobile)
+
+const iconMap = {
+    'card-icon-1': cardIcon1,
+    'card-icon-2': cardIcon2,
+    'card-icon-3': cardIcon3,
+    'card-icon-1.svg': cardIcon1,
+    'card-icon-2.svg': cardIcon2,
+    'card-icon-3.svg': cardIcon3
+}
+
+function getIconPath(iconName) {
+    if (!iconName) return cardIcon1
+    if (iconName.startsWith('http') || iconName.startsWith('/')) return iconName
+    return iconMap[iconName] || cardIcon1
+}
+
+async function loadDeliveryData() {
+    const blocks = await fetchContentBlocks('delivery')
+    const deliveryBlock = blocks.find(b => b.block_type === 'icon-cards' && b.block_name.includes('Доставка'))
+    if (deliveryBlock) {
+        sectionTitle.value = deliveryBlock.block_title || 'Как происходит доставка'
+        if (deliveryBlock.block_data) {
+            let data = deliveryBlock.block_data
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data)
+                } catch (e) {
+                    return
+                }
+            }
+            deliveryCards.value = data
+            totalSteps.value = data.length || 4
+        }
+    }
+}
 
 function getStepLeft(stepNum) {
   if (stepNum === activeStep.value) {
@@ -129,7 +136,7 @@ function scrollToCard(step) {
 }
 
 function nextStep() {
-  if (activeStep.value < totalSteps) {
+  if (activeStep.value < totalSteps.value) {
     activeStep.value++
     scrollToCard(activeStep.value)
   }
@@ -173,7 +180,7 @@ function onScroll() {
   const gap = 20
   const scrollLeft = cardsContainer.value.scrollLeft
   const newStep = Math.round(scrollLeft / (cardWidth + gap)) + 1
-  if (newStep >= 1 && newStep <= totalSteps && newStep !== activeStep.value) {
+  if (newStep >= 1 && newStep <= totalSteps.value && newStep !== activeStep.value) {
     activeStep.value = newStep
   }
 }
@@ -191,6 +198,7 @@ function goToStep(step) {
 }
 
 onMounted(() => {
+  loadDeliveryData()
   if (cardsContainer.value) {
     cardsContainer.value.addEventListener('scroll', onScroll, { passive: true })
   }
@@ -243,36 +251,13 @@ h2 {
   justify-content: center;
 }
 
-.btn img {
-  width: 24px;
-  height: 24px;
-  transition: transform 0.3s ease;
-}
-
-.btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.btn:hover img {
-  transform: scale(1.1);
-}
-
-.btn:active {
-  transform: translateY(0);
-}
-
-.arrow-left {
-  background-color: #fff;
-}
-
-.arrow-right {
-  background-color: #000000;
-}
-
-.arrow-right:hover {
-  background-color: #333;
-}
+.btn img { width: 24px; height: 24px; transition: transform 0.3s ease; }
+.btn:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); }
+.btn:hover img { transform: scale(1.1); }
+.btn:active { transform: translateY(0); }
+.arrow-left { background-color: #fff; }
+.arrow-right { background-color: #000000; }
+.arrow-right:hover { background-color: #333; }
 
 .content-wrapper {
   overflow: hidden;
@@ -298,9 +283,7 @@ h2 {
   justify-content: flex-start;
 }
 
-.cards-mobile::-webkit-scrollbar {
-  display: none;
-}
+.cards-mobile::-webkit-scrollbar { display: none; }
 
 .card {
   width: 440px;
@@ -320,24 +303,12 @@ h2 {
   box-shadow: 0px 12px 30px 0px #00000050;
 }
 
-.card:nth-child(1) {
-  height: 382px;
-}
-.card:nth-child(2) {
-  height: 406px;
-}
-.card:nth-child(3) {
-  height: 430px;
-}
-.card:nth-child(4) {
-  height: 454px;
-}
+.card:nth-child(1) { height: 382px; }
+.card:nth-child(2) { height: 406px; }
+.card:nth-child(3) { height: 430px; }
+.card:nth-child(4) { height: 454px; }
 
-.card-text {
-  display: flex;
-  flex-direction: column;
-  gap: 17px;
-}
+.card-text { display: flex; flex-direction: column; gap: 17px; }
 
 .card-title {
   font-weight: 500;
@@ -346,9 +317,7 @@ h2 {
   transition: color 0.3s ease;
 }
 
-.card:hover .card-title {
-  color: #C96744;
-}
+.card:hover .card-title { color: #C96744; }
 
 .card-desc {
   color: #000000;
@@ -369,14 +338,9 @@ h2 {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.wrap-icon img {
-  width: 32px;
-  height: 32px;
-}
+.wrap-icon img { width: 32px; height: 32px; }
 
-.card:hover .wrap-icon {
-  transform: scale(1.1);
-}
+.card:hover .wrap-icon { transform: scale(1.1); }
 
 .steps-wrapper {
   position: relative;
@@ -416,275 +380,74 @@ h2 {
   cursor: pointer;
 }
 
-.step-bead:hover {
-  transform: scale(1.1);
-}
-
-.step-bead.active {
-  background-color: #000000;
-  color: #ffffff;
-  z-index: 10;
-}
+.step-bead:hover { transform: scale(1.1); }
+.step-bead.active { background-color: #000000; color: #ffffff; z-index: 10; }
 
 @media (max-width: 1200px) {
-  .how-work {
-    gap: 56px;
-    padding: 0 32px;
-  }
-
-  h2 {
-    font-size: 36px;
-  }
-
-  .card {
-    width: 340px;
-  }
-
-  .card:nth-child(1) {
-    height: 320px;
-  }
-  .card:nth-child(2) {
-    height: 340px;
-  }
-  .card:nth-child(3) {
-    height: 360px;
-  }
-  .card:nth-child(4) {
-    height: 380px;
-  }
-
-  .rectangle {
-    left: 0;
-  }
-
-  .step-bead {
-    width: 64px;
-    height: 48px;
-    font-size: 20px;
-  }
-
-  .step-bead.active {
-    left: 0 !important;
-  }
+  .how-work { gap: 56px; padding: 0 32px; }
+  h2 { font-size: 36px; }
+  .card { width: 340px; }
+  .card:nth-child(1) { height: 320px; }
+  .card:nth-child(2) { height: 340px; }
+  .card:nth-child(3) { height: 360px; }
+  .card:nth-child(4) { height: 380px; }
+  .rectangle { left: 0; }
+  .step-bead { width: 64px; height: 48px; font-size: 20px; }
+  .step-bead.active { left: 0 !important; }
 }
 
 @media (max-width: 1024px) {
-  .how-work {
-    gap: 48px;
-    padding: 0 24px;
-  }
-
-  h2 {
-    font-size: 32px;
-  }
-
-  .btn {
-    width: 64px;
-    height: 48px;
-    padding: 8px 16px;
-  }
-
-  .btn img {
-    width: 20px;
-    height: 20px;
-  }
-
-  .card {
-    width: 300px;
-    padding: 20px 32px 24px 20px;
-  }
-
-  .card:nth-child(1) {
-    height: 280px;
-  }
-  .card:nth-child(2) {
-    height: 300px;
-  }
-  .card:nth-child(3) {
-    height: 320px;
-  }
-  .card:nth-child(4) {
-    height: 340px;
-  }
-
-  .card-title {
-    font-size: 24px;
-  }
-
-  .card-desc {
-    font-size: 18px;
-  }
-
-  .wrap-icon img {
-    width: 28px;
-    height: 28px;
-  }
+  .how-work { gap: 48px; padding: 0 24px; }
+  h2 { font-size: 32px; }
+  .btn { width: 64px; height: 48px; padding: 8px 16px; }
+  .btn img { width: 20px; height: 20px; }
+  .card { width: 300px; padding: 20px 32px 24px 20px; }
+  .card:nth-child(1) { height: 280px; }
+  .card:nth-child(2) { height: 300px; }
+  .card:nth-child(3) { height: 320px; }
+  .card:nth-child(4) { height: 340px; }
+  .card-title { font-size: 24px; }
+  .card-desc { font-size: 18px; }
+  .wrap-icon img { width: 28px; height: 28px; }
 }
 
 @media (max-width: 768px) {
-  .how-work {
-    gap: 40px;
-    padding: 0 16px;
-  }
-
-  h2 {
-    font-size: 28px;
-  }
-
-  .actions {
-    gap: 12px;
-  }
-
-  .btn {
-    width: 48px;
-    height: 40px;
-    padding: 6px 12px;
-    border-radius: 20px;
-  }
-
-  .btn img {
-    width: 16px;
-    height: 16px;
-  }
-
-  .card {
-    scroll-snap-align: start;
-    width: 280px;
-  }
-
-  .card:nth-child(1) {
-    height: 260px;
-  }
-  .card:nth-child(2) {
-    height: 280px;
-  }
-  .card:nth-child(3) {
-    height: 300px;
-  }
-  .card:nth-child(4) {
-    height: 320px;
-  }
-
-  .card-title {
-    font-size: 20px;
-  }
-
-  .card-desc {
-    font-size: 16px;
-  }
-
-  .wrap-icon {
-    width: 56px;
-    height: 44px;
-    padding: 10px 16px;
-  }
-
-  .wrap-icon img {
-    width: 24px;
-    height: 24px;
-  }
-
-  .rectangle {
-    display: none;
-  }
-
-  .steps-wrapper {
-    height: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .steps-track {
-    height: 40px;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .step-bead {
-    position: relative;
-    left: auto !important;
-    width: 48px;
-    height: 40px;
-    font-size: 16px;
-  }
+  .how-work { gap: 40px; padding: 0 16px; }
+  h2 { font-size: 28px; }
+  .actions { gap: 12px; }
+  .btn { width: 48px; height: 40px; padding: 6px 12px; border-radius: 20px; }
+  .btn img { width: 16px; height: 16px; }
+  .card { scroll-snap-align: start; width: 280px; }
+  .card:nth-child(1) { height: 260px; }
+  .card:nth-child(2) { height: 280px; }
+  .card:nth-child(3) { height: 300px; }
+  .card:nth-child(4) { height: 320px; }
+  .card-title { font-size: 20px; }
+  .card-desc { font-size: 16px; }
+  .wrap-icon { width: 56px; height: 44px; padding: 10px 16px; }
+  .wrap-icon img { width: 24px; height: 24px; }
+  .rectangle { display: none; }
+  .steps-wrapper { height: 40px; display: flex; flex-direction: column; align-items: center; }
+  .steps-track { height: 40px; display: flex; gap: 10px; justify-content: center; width: 100%; }
+  .step-bead { position: relative; left: auto !important; width: 48px; height: 40px; font-size: 16px; }
 }
 
 @media (max-width: 480px) {
-  .how-work {
-    gap: 32px;
-    padding: 0 12px;
-  }
-
-  h2 {
-    font-size: 24px;
-  }
-
-  .actions {
-    gap: 8px;
-  }
-
-  .btn {
-    width: 40px;
-    height: 36px;
-    padding: 4px 10px;
-    border-radius: 18px;
-  }
-
-  .btn img {
-    width: 14px;
-    height: 14px;
-  }
-
-  .card {
-    scroll-snap-align: start;
-    width: 260px;
-    padding: 16px 24px 20px 16px;
-  }
-
-  .card:nth-child(1) {
-    height: 240px;
-  }
-  .card:nth-child(2) {
-    height: 260px;
-  }
-  .card:nth-child(3) {
-    height: 280px;
-  }
-  .card:nth-child(4) {
-    height: 300px;
-  }
-
-  .card-title {
-    font-size: 18px;
-  }
-
-  .card-desc {
-    font-size: 14px;
-  }
-
-  .wrap-icon {
-    width: 48px;
-    height: 40px;
-    padding: 8px 12px;
-    border-radius: 12px;
-  }
-
-  .wrap-icon img {
-    width: 20px;
-    height: 20px;
-  }
-
-  .steps-track {
-    gap: 8px;
-  }
-
-  .step-bead {
-    width: 40px;
-    height: 36px;
-    font-size: 14px;
-  }
+  .how-work { gap: 32px; padding: 0 12px; }
+  h2 { font-size: 24px; }
+  .actions { gap: 8px; }
+  .btn { width: 40px; height: 36px; padding: 4px 10px; border-radius: 18px; }
+  .btn img { width: 14px; height: 14px; }
+  .card { scroll-snap-align: start; width: 260px; padding: 16px 24px 20px 16px; }
+  .card:nth-child(1) { height: 240px; }
+  .card:nth-child(2) { height: 260px; }
+  .card:nth-child(3) { height: 280px; }
+  .card:nth-child(4) { height: 300px; }
+  .card-title { font-size: 18px; }
+  .card-desc { font-size: 14px; }
+  .wrap-icon { width: 48px; height: 40px; padding: 8px 12px; border-radius: 12px; }
+  .wrap-icon img { width: 20px; height: 20px; }
+  .steps-track { gap: 8px; }
+  .step-bead { width: 40px; height: 36px; font-size: 14px; }
 }
 </style>
