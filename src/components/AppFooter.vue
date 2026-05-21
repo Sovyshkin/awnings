@@ -305,7 +305,8 @@ h3:hover {
     gap: 40px;
 }
 
-.docs span {
+.docs span,
+.docs .footer-link {
     color: #FFFFFF;
     opacity: 0.8;
     font-size: 20px;
@@ -314,7 +315,8 @@ h3:hover {
     transition: opacity 0.3s ease, color 0.3s ease;
 }
 
-.docs span:hover {
+.docs span:hover,
+.docs .footer-link:hover {
     opacity: 1;
     color: #C96744;
 }
@@ -351,7 +353,8 @@ h3:hover {
         font-size: 18px;
     }
 
-    .docs span {
+    .docs span,
+    .docs .footer-link {
         font-size: 18px;
     }
 }
@@ -454,7 +457,8 @@ h3:hover {
         gap: 12px;
     }
 
-    .docs span {
+    .docs span,
+    .docs .footer-link {
         font-size: 14px;
     }
 }
@@ -489,7 +493,8 @@ h3:hover {
         font-size: 12px;
     }
 
-    .docs span {
+    .docs span,
+    .docs .footer-link {
         font-size: 12px;
     }
 }
