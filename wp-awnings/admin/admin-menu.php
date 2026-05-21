@@ -83,6 +83,14 @@ function wp_awnings_admin_menu() {
 }
 add_action('admin_menu', 'wp_awnings_admin_menu');
 
+// Load media library scripts on Content admin page
+add_action('admin_enqueue_scripts', function($hook) {
+    if ($hook !== 'toplevel_page_wp-awnings-content') {
+        return;
+    }
+    wp_enqueue_media();
+});
+
 // Products page callback
 function wp_awnings_products_page() {
     include WP_AWNINGS_PATH . '/admin/products-admin.php';
