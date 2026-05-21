@@ -71,6 +71,8 @@ const WPA2 = {
     { key: 'contacts', label: 'Контакты' },
     { key: 'delivery', label: 'Доставка' },
     { key: 'garant', label: 'Гарантия' },
+    { key: 'privacy', label: 'Политика' },
+    { key: 'agreement', label: 'Соглашение' },
     { key: 'footer', label: 'Футер' },
     { key: 'header', label: 'Шапка' },
     { key: 'news', label: 'Новости' }
@@ -213,6 +215,12 @@ function renderBlockCard(block) {
         item.image = ''
       }
     })
+  }
+  if (block.block_type === 'contact' && dataObj && typeof dataObj === 'object' && !Array.isArray(dataObj)) {
+    if (dataObj.icon_phone === undefined) dataObj.icon_phone = ''
+    if (dataObj.icon_email === undefined) dataObj.icon_email = ''
+    if (dataObj.icon_address === undefined) dataObj.icon_address = ''
+    if (dataObj.icon_working_hours === undefined) dataObj.icon_working_hours = ''
   }
   const leaves = flattenLeaves(dataObj)
   const isNewsCards = block.block_type === 'news-cards'

@@ -91,6 +91,7 @@ const iconMap = {
 function getIconPath(iconName) {
     if (!iconName) return cardIcon1
     if (iconName.startsWith('http') || iconName.startsWith('/')) return iconName
+    if (iconName.startsWith('wp-content/')) return `/${iconName}`
     return iconMap[iconName] || cardIcon1
 }
 

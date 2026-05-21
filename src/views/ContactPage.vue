@@ -4,7 +4,7 @@
       <div class="breadcrumbs">
         <router-link to="/">Главная</router-link>
         <span>/</span>
-        <router-link to="/news-articles">Контакты</router-link>
+        <router-link to="/contacts">Контакты</router-link>
       </div>
     </div>
     <div class="contacts-content">
@@ -12,40 +12,40 @@
         <div class="cards">
           <div class="card">
             <div class="wrap-img">
-              <img src="../assets/contact-1.svg" alt="" />
+              <img :src="contactIcons.phone" alt="" />
             </div>
             <div class="card-text">
               <span class="text-title">Телефон</span>
-              <span class="text-value">+7 (900) 123-45-67</span>
+              <span class="text-value">{{ contactPhone }}</span>
             </div>
           </div>
           <div class="card">
             <div class="wrap-img">
-              <img src="../assets/contact-2.svg" alt="" />
+              <img :src="contactIcons.email" alt="" />
             </div>
             <div class="card-text">
               <span class="text-title">Email</span>
-              <span class="text-value">info@navesstroy.ru</span>
+              <span class="text-value">{{ contactEmail }}</span>
             </div>
           </div>
           <div class="card">
             <div class="wrap-img">
-              <img src="../assets/contact-3.svg" alt="" />
+              <img :src="contactIcons.address" alt="" />
             </div>
             <div class="card-text">
               <span class="text-title">Адрес</span>
               <span class="text-value"
-                >г. Екатеринбург, ул. Промышленная, д. 4, стр. 2</span
+                >{{ contactAddress }}</span
               >
             </div>
           </div>
           <div class="card">
             <div class="wrap-img">
-              <img src="../assets/contact-4.svg" alt="" />
+              <img :src="contactIcons.workingHours" alt="" />
             </div>
             <div class="card-text">
               <span class="text-title">Режим работы</span>
-              <span class="text-value">Пн-Вс: 9:00-18:00</span>
+              <span class="text-value">{{ contactWorkTime }}</span>
             </div>
           </div>
         </div>
@@ -53,8 +53,8 @@
       </div>
       <div class="form">
         <div class="form-wrap-title">
-            <h2 class="form-title">Остались вопросы?</h2>
-            <p class="form-subtitle">Оставьте заявку и наш менеджер свяжется с вами, что бы ответить на ваши вопросы!</p>
+            <h2 class="form-title">{{ formTitle }}</h2>
+            <p class="form-subtitle">{{ formSubtitle }}</p>
         </div>
         <form @submit.prevent="submitForm">
             <div class="group-input">
@@ -87,7 +87,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { submitLead } from '../services/api'
+import { submitLead, fetchContentBlocks } from '../services/api'
+import contactIcon1 from '../assets/contact-1.svg'
+import contactIcon2 from '../assets/contact-2.svg'
+import contactIcon3 from '../assets/contact-3.svg'
+import contactIcon4 from '../assets/contact-4.svg'
 
 const formData = ref({
   name: '',
@@ -99,6 +103,51 @@ const formData = ref({
 const submitting = ref(false)
 const formMessage = ref('')
 const formMessageType = ref('')
+const contactPhone = ref('+7 (900) 123-45-67')
+const contactEmail = ref('info@navesstroy.ru')
+const contactAddress = ref('г. Екатеринбург, ул. Промышленная, д. 4, стр. 2')
+const contactWorkTime = ref('Пн-Вс: 9:00-18:00')
+const formTitle = ref('Остались вопросы?')
+const formSubtitle = ref('Оставьте заявку и наш менеджер свяжется с вами, что бы ответить на ваши вопросы!')
+const contactIcons = ref({
+  phone: contactIcon1,
+  email: contactIcon2,
+  address: contactIcon3,
+  workingHours: contactIcon4
+})
+
+function resolveIcon(path, fallback) {
+  if (!path) return fallback
+  if (path.startsWith('http') || path.startsWith('/')) return path
+  if (path.startsWith('wp-content/')) return `/${path}`
+  return fallback
+}
+
+async function loadContactContent() {
+  const blocks = await fetchContentBlocks('contacts')
+
+  const infoBlock = blocks.find((b) => b.block_type === 'contact') || blocks.find((b) => (b.block_name || '').includes('Контакт'))
+  if (infoBlock && infoBlock.block_data) {
+    let data = infoBlock.block_data
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data) } catch (e) { data = {} }
+    }
+    contactPhone.value = data.phone || contactPhone.value
+    contactEmail.value = data.email || contactEmail.value
+    contactAddress.value = data.address || contactAddress.value
+    contactWorkTime.value = data.working_hours || data.schedule || contactWorkTime.value
+    contactIcons.value.phone = resolveIcon(data.icon_phone, contactIcon1)
+    contactIcons.value.email = resolveIcon(data.icon_email, contactIcon2)
+    contactIcons.value.address = resolveIcon(data.icon_address, contactIcon3)
+    contactIcons.value.workingHours = resolveIcon(data.icon_working_hours, contactIcon4)
+  }
+
+  const formBlock = blocks.find((b) => (b.block_name || '').includes('Форма')) || blocks.find((b) => b.block_type === 'section')
+  if (formBlock) {
+    formTitle.value = formBlock.block_title || formTitle.value
+    formSubtitle.value = formBlock.block_text || formSubtitle.value
+  }
+}
 
 const submitForm = async () => {
   if (!formData.value.agree) {
@@ -139,6 +188,7 @@ const submitForm = async () => {
 }
 
 onMounted(() => {
+  loadContactContent()
   // Initialize Yandex Maps
   const script = document.createElement('script')
   script.src = 'https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU'

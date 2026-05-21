@@ -54,6 +54,7 @@ const iconMap = {
 function getIconPath(iconName) {
   if (!iconName) return whyUs1
   if (iconName.startsWith('http') || iconName.startsWith('/')) return iconName
+  if (iconName.startsWith('wp-content/')) return `/${iconName}`
   return iconMap[iconName] || whyUs1
 }
 

@@ -96,6 +96,7 @@ const heroButtonLink = computed(() => {
 function getIconPath(iconName) {
   if (!iconName) return group1
   if (iconName.startsWith('http') || iconName.startsWith('/')) return iconName
+  if (iconName.startsWith('wp-content/')) return `/${iconName}`
   return iconMap[iconName] || group1
 }
 
@@ -109,6 +110,8 @@ async function loadHeroData() {
       const img = heroBlock.block_image
       if (img.startsWith('http') || img.startsWith('/')) {
         heroStyle.value = { backgroundImage: `url("${img}")` }
+      } else if (img.startsWith('wp-content/')) {
+        heroStyle.value = { backgroundImage: `url("/${img}")` }
       }
     }
   }

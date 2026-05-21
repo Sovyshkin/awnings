@@ -6,51 +6,18 @@
         <span>/</span>
         <router-link to="/delivery-and-payment">Доставка</router-link>
       </div>
-      <h1>Доставка и оплата</h1>
-      <p>
-        Доставляем по всей России. Несколько способов оплаты для вашего
-        удобства.
-      </p>
+      <h1>{{ pageTitle }}</h1>
+      <p>{{ pageSubtitle }}</p>
     </div>
     <div class="delivery-cards">
-      <div class="delivery-card">
+      <div class="delivery-card" v-for="(card, idx) in deliveryCards" :key="idx">
         <div class="delivery-card-wrap-title">
-          <span class="delivery-card-title"
-            >Доставка по Екатеринбургу и области</span
-          >
+          <span class="delivery-card-title">{{ card.title }}</span>
           <div class="delivery-card-rectangle"></div>
-          <span class="delivery-card-subtitle">от 5000 ₽</span>
+          <span class="delivery-card-subtitle">{{ card.subtitle }}</span>
         </div>
         <ul class="delivery-card-desc">
-          <li>Бесплатно при заказе от 200 000 ₽</li>
-          <li>Разгрузка включена</li>
-          <li>Согласование времени</li>
-        </ul>
-      </div>
-      <div class="delivery-card">
-        <div class="delivery-card-wrap-title">
-          <span class="delivery-card-title">Доставка по России</span>
-          <div class="delivery-card-rectangle"></div>
-          <span class="delivery-card-subtitle"
-            >Рассчитывается индивидуально</span
-          >
-        </div>
-        <ul class="delivery-card-desc">
-          <li>Любой регион РФ</li>
-          <li>Отслеживание груза</li>
-          <li>Страхование</li>
-        </ul>
-      </div>
-      <div class="delivery-card">
-        <div class="delivery-card-wrap-title">
-          <span class="delivery-card-title">Самовывоз</span>
-          <div class="delivery-card-rectangle"></div>
-          <span class="delivery-card-subtitle">Бесплатно</span>
-        </div>
-        <ul class="delivery-card-desc">
-          <li>Ежедневно 9:00-18:00</li>
-          <li>Предварительная запись</li>
-          <li>Помощь с погрузкой</li>
+          <li v-for="(item, itemIdx) in card.items" :key="itemIdx">{{ item }}</li>
         </ul>
       </div>
     </div>
@@ -58,44 +25,17 @@
 
     <div class="wrap-content">
             <div class="text">
-                <h2>Способы оплаты</h2>
-                <p>Быстрые сроки и высокое качество работы, а так же конфигуратор моделей под любой бюджет</p>
+                <h2>{{ paymentTitle }}</h2>
+                <p>{{ paymentSubtitle }}</p>
             </div>
             <div class="payment-cards">
-                <div class="payment-card">
+                <div class="payment-card" v-for="(item, index) in paymentCards" :key="index">
                     <div class="wrap-img">
-                        <img src="../assets/payment-1.svg" alt="">
+                        <img :src="resolveIcon(item.icon)" alt="">
                     </div>
                     <div class="payment-card-text">
-                        <span class="payment-card-title">Безналичный расчет</span>
-                        <p class="payment-card-desc">Для юридических лиц и ИП. Выставляем счет, работаем с НДС и без.</p>
-                    </div>
-                </div>
-                <div class="payment-card">
-                    <div class="wrap-img">
-                        <img src="../assets/payment-2.svg" alt="">
-                    </div>
-                    <div class="payment-card-text">
-                        <span class="payment-card-title">Банковский перевод</span>
-                        <p class="payment-card-desc">Перевод на расчетный счет компании.</p>
-                    </div>
-                </div>
-                <div class="payment-card">
-                    <div class="wrap-img">
-                        <img src="../assets/payment-3.svg" alt="">
-                    </div>
-                    <div class="payment-card-text">
-                        <span class="payment-card-title">Наличные</span>
-                        <p class="payment-card-desc">Оплата при получении или в офисе компании.</p>
-                    </div>
-                </div>
-                <div class="payment-card">
-                    <div class="wrap-img">
-                        <img src="../assets/payment-4.svg" alt="">
-                    </div>
-                    <div class="payment-card-text">
-                        <span class="payment-card-title">Рассрочка</span>
-                        <p class="payment-card-desc">Возможна рассрочка платежа на срок до 6 месяцев.</p>
+                        <span class="payment-card-title">{{ item.title }}</span>
+                        <p class="payment-card-desc">{{ item.text }}</p>
                     </div>
                 </div>
             </div>
@@ -108,14 +48,108 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import FaqBlock from '../components/FaqBlock.vue'
 import HowDelivery from '../components/HowDelivery.vue'
+import { fetchContentBlocks } from '../services/api'
+import payment1 from '../assets/payment-1.svg'
+import payment2 from '../assets/payment-2.svg'
+import payment3 from '../assets/payment-3.svg'
+import payment4 from '../assets/payment-4.svg'
 
 const isMobile = ref(false)
+const pageTitle = ref('Доставка и оплата')
+const pageSubtitle = ref('Доставляем по всей России. Несколько способов оплаты для вашего удобства.')
+const paymentTitle = ref('Способы оплаты')
+const paymentSubtitle = ref('Быстрые сроки и высокое качество работы, а так же конфигуратор моделей под любой бюджет')
+const deliveryCards = ref([
+  {
+    title: 'Доставка по Екатеринбургу и области',
+    subtitle: 'от 5000 ₽',
+    items: ['Бесплатно при заказе от 200 000 ₽', 'Разгрузка включена', 'Согласование времени']
+  },
+  {
+    title: 'Доставка по России',
+    subtitle: 'Рассчитывается индивидуально',
+    items: ['Любой регион РФ', 'Отслеживание груза', 'Страхование']
+  },
+  {
+    title: 'Самовывоз',
+    subtitle: 'Бесплатно',
+    items: ['Ежедневно 9:00-18:00', 'Предварительная запись', 'Помощь с погрузкой']
+  }
+])
+const paymentCards = ref([
+  { icon: 'payment-1', title: 'Безналичный расчет', text: 'Для юридических лиц и ИП. Выставляем счет, работаем с НДС и без.' },
+  { icon: 'payment-2', title: 'Банковский перевод', text: 'Перевод на расчетный счет компании.' },
+  { icon: 'payment-3', title: 'Наличные', text: 'Оплата при получении или в офисе компании.' },
+  { icon: 'payment-4', title: 'Рассрочка', text: 'Возможна рассрочка платежа на срок до 6 месяцев.' }
+])
+
+const iconMap = {
+  'payment-1': payment1,
+  'payment-2': payment2,
+  'payment-3': payment3,
+  'payment-4': payment4,
+  'payment-1.svg': payment1,
+  'payment-2.svg': payment2,
+  'payment-3.svg': payment3,
+  'payment-4.svg': payment4
+}
+
+function resolveIcon(icon) {
+  if (!icon) return payment1
+  if (icon.startsWith('http') || icon.startsWith('/')) return icon
+  if (icon.startsWith('wp-content/')) return `/${icon}`
+  return iconMap[icon] || payment1
+}
+
+async function loadDeliveryContent() {
+  const blocks = await fetchContentBlocks('delivery')
+  const regionsBlock = blocks.find((b) => (b.block_name || '').includes('Регионы')) || blocks.find((b) => b.block_type === 'regions')
+  if (regionsBlock) {
+    pageTitle.value = regionsBlock.block_title || pageTitle.value
+    pageSubtitle.value = regionsBlock.block_text || pageSubtitle.value
+  }
+
+  const payBlock = blocks.find((b) => (b.block_name || '').includes('Способы оплаты')) || blocks.find((b) => b.block_type === 'features')
+  if (payBlock) {
+    paymentTitle.value = payBlock.block_title || paymentTitle.value
+    paymentSubtitle.value = payBlock.block_text || paymentSubtitle.value
+    if (payBlock.block_data) {
+      let data = payBlock.block_data
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data) } catch (e) { data = [] }
+      }
+      if (Array.isArray(data) && data.length) {
+        paymentCards.value = data.map((item) => ({
+          icon: item.icon || 'payment-1',
+          title: item.title || '',
+          text: item.text || ''
+        }))
+      }
+    }
+  }
+
+  const cardsBlock = blocks.find((b) => b.block_type === 'delivery-cards') || blocks.find((b) => (b.block_name || '').includes('Карточки доставки'))
+  if (cardsBlock && cardsBlock.block_data) {
+    let data = cardsBlock.block_data
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data) } catch (e) { data = [] }
+    }
+    if (Array.isArray(data) && data.length) {
+      deliveryCards.value = data.map((item) => ({
+        title: item.title || '',
+        subtitle: item.subtitle || '',
+        items: Array.isArray(item.items) ? item.items : []
+      }))
+    }
+  }
+}
 
 function checkMobile() {
   isMobile.value = window.innerWidth <= 768
 }
 
 onMounted(() => {
+  loadDeliveryContent()
   checkMobile()
   window.addEventListener('resize', checkMobile)
 })

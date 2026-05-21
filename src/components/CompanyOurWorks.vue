@@ -18,6 +18,13 @@ import defaultImage from '../assets/company-card-1.png'
 
 const projects = ref(Array(9).fill(null).map(() => ({ image: '' })))
 
+function resolveImage(path) {
+  if (!path) return defaultImage
+  if (path.startsWith('http') || path.startsWith('/')) return path
+  if (path.startsWith('wp-content/')) return `/${path}`
+  return `/wp-content/themes/wp-awnings/assets/${path.split('/').pop()}`
+}
+
 function goToArticle(index) {
   // Можно добавить навигацию
   console.log('Go to article', index)
@@ -36,7 +43,10 @@ async function loadProjects() {
       }
     }
     if (Array.isArray(data) && data.length > 0) {
-      projects.value = data.slice(0, 9) // максимум 9 проектов
+      projects.value = data.slice(0, 9).map((item) => ({
+        ...item,
+        image: resolveImage(item.image)
+      }))
     }
   }
 }

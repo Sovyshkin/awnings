@@ -1,6 +1,6 @@
 <template>
     <section class="faq">
-        <h2>Самые популярные вопросы</h2>
+        <h2>{{ faqTitle }}</h2>
         <div class="cards">
             <div
                 v-for="(item, index) in faqItems"
@@ -26,6 +26,7 @@ import { ref, onMounted } from 'vue'
 import { fetchContentBlocks } from '../services/api'
 
 const openIndex = ref(null)
+const faqTitle = ref('Самые популярные вопросы')
 
 const faqItems = ref([
     {
@@ -52,6 +53,10 @@ const faqItems = ref([
 
 async function loadFaqData() {
     const blocks = await fetchContentBlocks('faq')
+    const headerBlock = blocks.find(b => (b.block_name || '').includes('Заголовок')) || blocks.find(b => b.block_type === 'section')
+    if (headerBlock && headerBlock.block_title) {
+        faqTitle.value = headerBlock.block_title
+    }
     const faqBlock = blocks.find(b => b.block_type === 'faq')
     if (faqBlock && faqBlock.block_data) {
         let data = faqBlock.block_data

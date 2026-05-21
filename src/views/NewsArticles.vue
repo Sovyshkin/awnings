@@ -14,6 +14,7 @@ const cards = ref([])
 function resolveImage(path) {
   if (!path) return defaultImage
   if (path.startsWith('http') || path.startsWith('/')) return path
+  if (path.startsWith('wp-content/')) return `/${path}`
   return `/wp-content/themes/wp-awnings/assets/${path.split('/').pop()}`
 }
 

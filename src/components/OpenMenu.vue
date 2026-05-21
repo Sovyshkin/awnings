@@ -65,8 +65,10 @@ async function loadMenuData() {
         if (data.address) footerAddress.value = data.address
         if (data.phone) footerPhone.value = data.phone
         if (data.image) {
-            if (data.image.startsWith('http')) {
+            if (data.image.startsWith('http') || data.image.startsWith('/')) {
                 menuImage.value = data.image
+            } else if (data.image.startsWith('wp-content/')) {
+                menuImage.value = `/${data.image}`
             } else {
                 menuImage.value = `/wp-content/themes/wp-awnings/assets/${data.image.split('/').pop()}`
             }

@@ -9,11 +9,11 @@
       <h1>Гарантия</h1>
     </div>
     <div class="garant-banner">
-        <h3>Мы обеспечиваем заказчикам гарантию на срок 12 месяцев, в том числе 12 месяцев претенциозного обслуживания бесплатно</h3>
-        <button class="garant-btn">Гарантийный случай</button>
+        <h3>{{ bannerText }}</h3>
+        <button class="garant-btn">{{ bannerButtonText }}</button>
     </div>
     <section class="garant-faq-green">
-        <h2>На что <span class="garant-green">распространяется</span> гарантия</h2>
+        <h2>{{ greenTitle }}</h2>
         <div class="garant-faq-cards">
             <div
                 v-for="(item, index) in greenItems"
@@ -33,7 +33,7 @@
         </div>
     </section>
     <section class="garant-faq-red">
-        <h2>На что <span class="garant-red">не распространяется</span> гарантия</h2>
+        <h2>{{ redTitle }}</h2>
         <div class="garant-faq-cards">
             <div
                 v-for="(item, index) in redItems"
@@ -55,34 +55,16 @@
     <section class="garant-how">
         <div class="garant-how-content">
             <div class="garant-how-text">
-                <h2>Как воспользоваться гарантией?</h2>
+                <h2>{{ howTitle }}</h2>
             </div>
             <div class="garant-how-cards">
-                <div class="garant-how-card">
+                <div class="garant-how-card" v-for="(item, idx) in howItems" :key="idx">
                     <div class="garant-how-img">
-                        01
+                        {{ String(idx + 1).padStart(2, '0') }}
                     </div>
                     <div class="garant-how-card-text">
-                        <span class="garant-how-title">Свяжитесь с нами</span>
-                        <p class="garant-how-desc">Позвоните или напишите о возникшей проблеме</p>
-                    </div>
-                </div>
-                <div class="garant-how-card">
-                    <div class="garant-how-img">
-                        02
-                    </div>
-                    <div class="garant-how-card-text">
-                        <span class="garant-how-title">Диагностика</span>
-                        <p class="garant-how-desc">Наш специалист осмотрит изделие и определит причину</p>
-                    </div>
-                </div>
-                <div class="garant-how-card">
-                    <div class="garant-how-img">
-                        03
-                    </div>
-                    <div class="garant-how-card-text">
-                        <span class="garant-how-title">Устранение</span>
-                        <p class="garant-how-desc">Бесплатно устраним дефект или заменим изделие</p>
+                        <span class="garant-how-title">{{ item.title }}</span>
+                        <p class="garant-how-desc">{{ item.text }}</p>
                     </div>
                 </div>
             </div>
@@ -92,10 +74,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { fetchContentBlocks } from '../services/api'
 
 const greenIndex = ref(null)
 const redIndex = ref(null)
+const bannerText = ref('Мы обеспечиваем заказчикам гарантию на срок 12 месяцев, в том числе 12 месяцев претензионного обслуживания бесплатно')
+const bannerButtonText = ref('Гарантийный случай')
+const greenTitle = ref('На что распространяется гарантия')
+const redTitle = ref('На что не распространяется гарантия')
+const howTitle = ref('Как воспользоваться гарантией?')
+const howItems = ref([
+  { title: 'Свяжитесь с нами', text: 'Позвоните или напишите о возникшей проблеме' },
+  { title: 'Диагностика', text: 'Наш специалист осмотрит изделие и определит причину' },
+  { title: 'Устранение', text: 'Бесплатно устраним дефект или заменим изделие' }
+])
 
 const greenItems = [
     {
@@ -158,6 +151,67 @@ function toggleGreenFaq(index) {
 function toggleRedFaq(index) {
     redIndex.value = redIndex.value === index ? null : index
 }
+
+async function loadGarantContent() {
+  const blocks = await fetchContentBlocks('garant')
+  const bannerBlock = blocks.find((b) => (b.block_name || '').includes('Гарантия - Баннер')) || blocks.find((b) => b.block_type === 'hero')
+  if (bannerBlock) {
+    bannerText.value = bannerBlock.block_text || bannerText.value
+    if (bannerBlock.block_data) {
+      let data = bannerBlock.block_data
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data) } catch (e) { data = {} }
+      }
+      bannerButtonText.value = data.button_text || bannerButtonText.value
+    }
+  }
+
+  const greenBlock = blocks.find((b) => (b.block_name || '').includes('распространяется')) || blocks.find((b) => b.block_name === 'На что распространяется гарантия')
+  if (greenBlock) {
+    greenTitle.value = greenBlock.block_title || greenBlock.block_name || greenTitle.value
+    if (greenBlock.block_data) {
+      let data = greenBlock.block_data
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data) } catch (e) { data = [] }
+      }
+      if (Array.isArray(data) && data.length) {
+        greenItems.value = data.map((it) => ({ question: it.question || it.title || '', answer: it.answer || it.text || '' }))
+      }
+    }
+  }
+
+  const redBlock = blocks.find((b) => (b.block_name || '').includes('не распространяется'))
+  if (redBlock) {
+    redTitle.value = redBlock.block_title || redBlock.block_name || redTitle.value
+    if (redBlock.block_data) {
+      let data = redBlock.block_data
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data) } catch (e) { data = [] }
+      }
+      if (Array.isArray(data) && data.length) {
+        redItems.value = data.map((it) => ({ question: it.question || it.title || '', answer: it.answer || it.text || '' }))
+      }
+    }
+  }
+
+  const howBlock = blocks.find((b) => (b.block_name || '').includes('Как воспользоваться')) || blocks.find((b) => b.block_type === 'icon-cards')
+  if (howBlock) {
+    howTitle.value = howBlock.block_title || howBlock.block_name || howTitle.value
+    if (howBlock.block_data) {
+      let data = howBlock.block_data
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data) } catch (e) { data = [] }
+      }
+      if (Array.isArray(data) && data.length) {
+        howItems.value = data.map((it) => ({ title: it.title || '', text: it.text || '' }))
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  loadGarantContent()
+})
 </script>
 
 <style scoped>

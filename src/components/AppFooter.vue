@@ -9,20 +9,28 @@
                 <div class="catalog">
                     <h3>Каталог</h3>
                     <ul class="list-nav">
-                        <li v-for="(item, index) in catalogLinks" :key="index" class="item-nav">{{ item.text }}</li>
+                        <li v-for="(item, index) in catalogLinks" :key="index" class="item-nav">
+                            <router-link class="footer-link" :to="item.link">{{ item.text }}</router-link>
+                        </li>
                     </ul>
                 </div>
                 <div class="client">
                     <h3>Покупателям</h3>
                     <ul class="list-nav">
-                        <li v-for="(item, index) in clientLinks" :key="index" class="item-nav">{{ item.text }}</li>
+                        <li v-for="(item, index) in clientLinks" :key="index" class="item-nav">
+                            <router-link class="footer-link" :to="item.link">{{ item.text }}</router-link>
+                        </li>
                     </ul>
                 </div>
                 <div class="contact">
                     <h3>Контакты</h3>
                     <ul class="list-nav">
-                        <li class="item-nav">{{ footerPhone || '+7 (900) 123-45-67' }}</li>
-                        <li class="item-nav">{{ footerEmail || 'info@navesstroy.ru' }}</li>
+                        <li class="item-nav">
+                            <a class="footer-link" :href="phoneHref">{{ footerPhone || '+7 (900) 123-45-67' }}</a>
+                        </li>
+                        <li class="item-nav">
+                            <a class="footer-link" :href="emailHref">{{ footerEmail || 'info@navesstroy.ru' }}</a>
+                        </li>
                         <li class="item-nav">{{ footerAddress || 'г. Екатеринбург, ул. Промышленная, д. 4, стр. 2' }}</li>
                     </ul>
                 </div>
@@ -31,8 +39,8 @@
         <div class="footer-sub">
             <span class="copy">{{ footerCopyright || '© 2026 Название. Все права защищены.' }}</span>
             <div class="docs">
-                <span>{{ footerPrivacy || 'Политика конфиденциальности' }}</span>
-                <span>{{ footerAgreement || 'Пользовательское соглашение' }}</span>
+                <router-link class="footer-link" to="/privacy-policy">{{ footerPrivacy || 'Политика конфиденциальности' }}</router-link>
+                <router-link class="footer-link" to="/user-agreement">{{ footerAgreement || 'Пользовательское соглашение' }}</router-link>
             </div>
         </div>
     </footer>
@@ -51,17 +59,54 @@ const footerPhone = ref('')
 const footerEmail = ref('')
 const footerAddress = ref('')
 const catalogLinks = ref([
-    { text: 'Беседки' },
-    { text: 'Мангальные зоны' },
-    { text: 'Навесы для авто' },
+    { text: 'Беседки', link: '/catalog?category=besedka' },
+    { text: 'Мангальные зоны', link: '/catalog?category=mangal' },
+    { text: 'Навесы для авто', link: '/catalog?category=naves' },
 ])
 const clientLinks = ref([
-    { text: 'О компании' },
-    { text: 'Новости и статьи' },
-    { text: 'Доставка и оплата' },
-    { text: 'Гарантия' },
-    { text: 'Контакты' },
+    { text: 'О компании', link: '/about-company' },
+    { text: 'Новости и статьи', link: '/news-articles' },
+    { text: 'Доставка и оплата', link: '/delivery-and-payment' },
+    { text: 'Гарантия', link: '/garant' },
+    { text: 'Контакты', link: '/contacts' },
 ])
+
+const defaultCatalogLinksMap = {
+    'беседки': '/catalog?category=besedka',
+    'мангальные зоны': '/catalog?category=mangal',
+    'навесы для авто': '/catalog?category=naves',
+    'навесы для автомобилей': '/catalog?category=naves'
+}
+
+const defaultClientLinksMap = {
+    'о компании': '/about-company',
+    'новости и статьи': '/news-articles',
+    'новости': '/news-articles',
+    'доставка и оплата': '/delivery-and-payment',
+    'гарантия': '/garant',
+    'контакты': '/contacts',
+    'faq': '/garant'
+}
+
+const phoneHref = ref('tel:+79001234567')
+const emailHref = ref('mailto:info@navesstroy.ru')
+
+function normalizePhone(phone) {
+    return String(phone || '').replace(/[^\d+]/g, '')
+}
+
+function normalizeLinks(items, map, fallback = '/') {
+    if (!Array.isArray(items)) return []
+    return items.map((item) => {
+        const text = (item?.text || '').trim()
+        const directLink = (item?.link || '').trim()
+        const mapped = map[text.toLowerCase()] || fallback
+        return {
+            text: text || 'Ссылка',
+            link: directLink || mapped
+        }
+    })
+}
 
 async function loadFooterData() {
     const blocks = await fetchContentBlocks('footer')
@@ -96,7 +141,7 @@ async function loadFooterData() {
             }
         }
         if (Array.isArray(data)) {
-            catalogLinks.value = data
+            catalogLinks.value = normalizeLinks(data, defaultCatalogLinksMap, '/catalog')
         }
     }
     
@@ -111,7 +156,7 @@ async function loadFooterData() {
             }
         }
         if (Array.isArray(data)) {
-            clientLinks.value = data
+            clientLinks.value = normalizeLinks(data, defaultClientLinksMap, '/')
         }
     }
     
@@ -128,6 +173,8 @@ async function loadFooterData() {
         footerPhone.value = data.phone || ''
         footerEmail.value = data.email || ''
         footerAddress.value = data.address || ''
+        phoneHref.value = 'tel:' + (normalizePhone(footerPhone.value) || '+79001234567')
+        emailHref.value = 'mailto:' + (footerEmail.value || 'info@navesstroy.ru')
     }
 }
 
@@ -211,6 +258,11 @@ h3:hover {
     font-weight: 300;
     transition: opacity 0.3s ease, color 0.3s ease, transform 0.3s ease;
     cursor: pointer;
+}
+
+.footer-link {
+    color: inherit;
+    text-decoration: inherit;
 }
 
 .item-nav:hover {

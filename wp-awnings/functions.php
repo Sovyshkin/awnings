@@ -866,9 +866,9 @@ function wp_awnings_create_content_block($request) {
     $block_type = isset($request['block_type']) ? sanitize_text_field($request['block_type']) : 'text';
     $block_page = isset($request['block_page']) ? sanitize_text_field($request['block_page']) : 'home';
     $block_title = isset($request['block_title']) ? sanitize_text_field($request['block_title']) : '';
-    $block_text = isset($request['block_text']) ? sanitize_text_field($request['block_text']) : '';
+    $block_text = isset($request['block_text']) ? sanitize_textarea_field($request['block_text']) : '';
     $block_image = isset($request['block_image']) ? esc_url_raw($request['block_image']) : '';
-    $block_data = isset($request['block_data']) ? sanitize_text_field($request['block_data']) : '{}';
+    $block_data = isset($request['block_data']) ? wp_unslash($request['block_data']) : '{}';
     $block_order = isset($request['block_order']) ? (int)$request['block_order'] : 0;
 
     $post_data = array(
@@ -913,9 +913,9 @@ function wp_awnings_update_content_block($request) {
     $block_type = isset($request['block_type']) ? sanitize_text_field($request['block_type']) : get_post_meta($id, 'block_type', true);
     $block_page = isset($request['block_page']) ? sanitize_text_field($request['block_page']) : get_post_meta($id, 'block_page', true);
     $block_title = isset($request['block_title']) ? sanitize_text_field($request['block_title']) : get_post_meta($id, 'block_title', true);
-    $block_text = isset($request['block_text']) ? sanitize_text_field($request['block_text']) : get_post_meta($id, 'block_text', true);
+    $block_text = isset($request['block_text']) ? sanitize_textarea_field($request['block_text']) : get_post_meta($id, 'block_text', true);
     $block_image = isset($request['block_image']) ? esc_url_raw($request['block_image']) : get_post_meta($id, 'block_image', true);
-    $block_data = isset($request['block_data']) ? sanitize_text_field($request['block_data']) : get_post_meta($id, 'block_data', true);
+    $block_data = isset($request['block_data']) ? wp_unslash($request['block_data']) : get_post_meta($id, 'block_data', true);
     $block_order = isset($request['block_order']) ? (int)$request['block_order'] : get_post_meta($id, 'block_order', true);
 
     wp_update_post(array('ID' => $id, 'post_title' => $block_name));
@@ -1248,6 +1248,11 @@ function wp_awnings_create_initial_content() {
         'email' => 'info@navesstroy.ru',
         'address' => 'г. Екатеринбург, ул. Промышленная, д. 4, стр. 2',
         'schedule' => 'Пн-Вс: 9:00-18:00',
+        'working_hours' => 'Пн-Вс: 9:00-18:00',
+        'icon_phone' => 'contact-1.svg',
+        'icon_email' => 'contact-2.svg',
+        'icon_address' => 'contact-3.svg',
+        'icon_working_hours' => 'contact-4.svg',
     ), JSON_UNESCAPED_UNICODE));
     update_post_meta($contacts_id, 'block_order', 1);
     
@@ -1273,6 +1278,30 @@ function wp_awnings_create_initial_content() {
     update_post_meta($del1_id, 'block_text', 'Работаем с транспортными компаниями и собственным транспортом. Доставка в любой регион России.');
     update_post_meta($del1_id, 'block_image', 'delivery-regions.png');
     update_post_meta($del1_id, 'block_order', $del_order++);
+
+    // Delivery cards
+    $del_cards_id = wp_insert_post(array('post_type' => 'content_block', 'post_title' => 'Карточки доставки', 'post_status' => 'publish'));
+    update_post_meta($del_cards_id, 'block_name', 'Карточки доставки');
+    update_post_meta($del_cards_id, 'block_type', 'delivery-cards');
+    update_post_meta($del_cards_id, 'block_page', 'delivery');
+    update_post_meta($del_cards_id, 'block_data', json_encode(array(
+        array(
+            'title' => 'Доставка по Екатеринбургу и области',
+            'subtitle' => 'от 5000 ₽',
+            'items' => array('Бесплатно при заказе от 200 000 ₽', 'Разгрузка включена', 'Согласование времени')
+        ),
+        array(
+            'title' => 'Доставка по России',
+            'subtitle' => 'Рассчитывается индивидуально',
+            'items' => array('Любой регион РФ', 'Отслеживание груза', 'Страхование')
+        ),
+        array(
+            'title' => 'Самовывоз',
+            'subtitle' => 'Бесплатно',
+            'items' => array('Ежедневно 9:00-18:00', 'Предварительная запись', 'Помощь с погрузкой')
+        )
+    ), JSON_UNESCAPED_UNICODE));
+    update_post_meta($del_cards_id, 'block_order', $del_order++);
     
     // Payment methods
     $pay_id = wp_insert_post(array('post_type' => 'content_block', 'post_title' => 'Способы оплаты', 'post_status' => 'publish'));
@@ -1465,6 +1494,26 @@ function wp_awnings_create_initial_content() {
         array('question' => 'Из каких материалов изготавливаются конструкции?', 'answer' => 'Каркас из стального профиля, кровля из поликарбоната или металлочерепицы.'),
     ), JSON_UNESCAPED_UNICODE));
     update_post_meta($faq2_id, 'block_order', $faq_order++);
+
+    // ===== LEGAL PAGES =====
+
+    $privacy_order = 1;
+    $privacy_id = wp_insert_post(array('post_type' => 'content_block', 'post_title' => 'Политика конфиденциальности', 'post_status' => 'publish'));
+    update_post_meta($privacy_id, 'block_name', 'Политика конфиденциальности');
+    update_post_meta($privacy_id, 'block_type', 'legal');
+    update_post_meta($privacy_id, 'block_page', 'privacy');
+    update_post_meta($privacy_id, 'block_title', 'Политика конфиденциальности');
+    update_post_meta($privacy_id, 'block_text', "1. Общие положения\nНастоящая политика описывает, как сайт обрабатывает персональные данные пользователей.\n\n2. Какие данные мы собираем\nМы можем собирать имя, телефон, e-mail и иные данные, которые пользователь указывает в формах сайта.\n\n3. Цели обработки\nДанные используются для связи с пользователем, обработки заявок и улучшения качества обслуживания.\n\n4. Защита данных\nМы принимаем организационные и технические меры для защиты персональных данных.\n\n5. Контакты\nПо вопросам обработки персональных данных свяжитесь с нами по контактам, указанным на сайте.");
+    update_post_meta($privacy_id, 'block_order', $privacy_order++);
+
+    $agreement_order = 1;
+    $agreement_id = wp_insert_post(array('post_type' => 'content_block', 'post_title' => 'Пользовательское соглашение', 'post_status' => 'publish'));
+    update_post_meta($agreement_id, 'block_name', 'Пользовательское соглашение');
+    update_post_meta($agreement_id, 'block_type', 'legal');
+    update_post_meta($agreement_id, 'block_page', 'agreement');
+    update_post_meta($agreement_id, 'block_title', 'Пользовательское соглашение');
+    update_post_meta($agreement_id, 'block_text', "1. Предмет соглашения\nНастоящее соглашение регулирует порядок использования сайта пользователем.\n\n2. Права и обязанности сторон\nПользователь обязуется предоставлять достоверную информацию при отправке заявок.\n\n3. Ограничение ответственности\nАдминистрация сайта не несет ответственности за возможные перерывы в работе сайта по техническим причинам.\n\n4. Интеллектуальная собственность\nВсе материалы сайта защищены законодательством об авторском праве.\n\n5. Заключительные положения\nПродолжая использовать сайт, пользователь подтверждает согласие с условиями настоящего соглашения.");
+    update_post_meta($agreement_id, 'block_order', $agreement_order++);
     // ===== HOME - HOW WE WORK =====
     
     $how_order = 1;

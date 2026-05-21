@@ -69,7 +69,7 @@ const sectionTitle = ref('Как мы работаем')
 const workCards = ref([])
 
 const activeStep = ref(1)
-const totalSteps = 4
+const totalSteps = ref(4)
 const cardsContainer = ref(null)
 
 const cardWidth = 440
@@ -91,12 +91,15 @@ const iconMap = {
 function getIconPath(iconName) {
     if (!iconName) return cardIcon1
     if (iconName.startsWith('http') || iconName.startsWith('/')) return iconName
+    if (iconName.startsWith('wp-content/')) return `/${iconName}`
     return iconMap[iconName] || cardIcon1
 }
 
 async function loadWorkData() {
     const blocks = await fetchContentBlocks('home')
-    const workBlock = blocks.find(b => b.block_type === 'icon-cards' && b.block_name.includes('Как мы работаем'))
+    const workBlock = blocks.find(b => b.block_name && b.block_name.includes('Как мы работаем')) ||
+      blocks.find(b => b.block_type === 'icon-cards' && b.block_page === 'home') ||
+      blocks.find(b => b.block_type === 'features' && b.block_name && b.block_name.includes('Как мы работаем'))
     if (workBlock) {
         sectionTitle.value = workBlock.block_title || 'Как мы работаем'
         if (workBlock.block_data) {

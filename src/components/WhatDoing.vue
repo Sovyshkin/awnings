@@ -32,6 +32,8 @@ const cards = ref([
 function getImageUrl(imagePath) {
   if (!imagePath) return cardImage
   if (imagePath.startsWith('http')) return imagePath
+  if (imagePath.startsWith('/')) return imagePath
+  if (imagePath.startsWith('wp-content/')) return `/${imagePath}`
   return `/wp-content/themes/wp-awnings/assets/${imagePath.split('/').pop()}`
 }
 
