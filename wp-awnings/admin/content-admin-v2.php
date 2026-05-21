@@ -216,6 +216,7 @@ function renderBlockCard(block) {
   }
   const leaves = flattenLeaves(dataObj)
   const isNewsCards = block.block_type === 'news-cards'
+  const isGalleryBlock = block.block_type === 'gallery'
   const isFaqBlock = block.block_type === 'faq'
 
   let html = ''
@@ -257,6 +258,25 @@ function renderBlockCard(block) {
     })
     html += '      </div>'
     html += '      <button type="button" class="wpa2-btn wpa2-btn-edit" data-add-news="' + block.id + '">+ Добавить карточку</button>'
+    html += '    </div>'
+  } else if (isGalleryBlock) {
+    const projects = Array.isArray(dataObj) ? dataObj : []
+    html += '    <p class="wpa2-note">Удобный редактор проектов (галерея).</p>'
+    html += '    <div class="wpa2-data-box">'
+    html += '      <p class="wpa2-data-title">Карточки проектов</p>'
+    html += '      <div id="gallery-items-' + block.id + '">'
+    projects.forEach((item, index) => {
+      const cardId = block.id + '-' + index
+      html += '        <div class="wpa2-leaf gallery-item" data-index="' + index + '">'
+      html += '          <div class="wpa2-leaf-path">Проект ' + (index + 1) + '</div>'
+      html += '          <div class="wpa2-row"><label>Название</label><input type="text" class="gallery-title" value="' + escapeHtml(item.title || '') + '"></div>'
+      html += '          <div class="wpa2-row"><label>Цена</label><input type="text" class="gallery-price" value="' + escapeHtml(item.price || '') + '"></div>'
+      html += '          <div class="wpa2-row"><label>Изображение</label><input type="text" id="gallery-image-' + cardId + '" class="gallery-image" value="' + escapeHtml(item.image || '') + '"><button type="button" class="wpa2-media gallery-media-btn" data-media-input="gallery-image-' + cardId + '">Выбрать файл</button></div>'
+      html += '          <button type="button" class="wpa2-btn wpa2-cancel gallery-remove">Удалить проект</button>'
+      html += '        </div>'
+    })
+    html += '      </div>'
+    html += '      <button type="button" class="wpa2-btn wpa2-btn-edit" data-add-gallery="' + block.id + '">+ Добавить проект</button>'
     html += '    </div>'
   } else if (isFaqBlock) {
     const faqItems = Array.isArray(dataObj) ? dataObj : []
@@ -371,6 +391,40 @@ function bindCardEvents(blocks) {
       btn.addEventListener('click', () => btn.closest('.news-card-item')?.remove())
     })
 
+    card.querySelectorAll('.gallery-media-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-media-input')
+        const input = card.querySelector('#' + CSS.escape(id))
+        openMediaForInput(input)
+      })
+    })
+
+    card.querySelector('[data-add-gallery="' + block.id + '"]')?.addEventListener('click', () => {
+      const list = card.querySelector('#gallery-items-' + block.id)
+      if (!list) return
+      const idx = list.querySelectorAll('.gallery-item').length
+      const cardId = block.id + '-' + idx + '-' + Date.now()
+      const wrapper = document.createElement('div')
+      wrapper.className = 'wpa2-leaf gallery-item'
+      wrapper.setAttribute('data-index', String(idx))
+      wrapper.innerHTML = ''
+        + '<div class="wpa2-leaf-path">Проект ' + (idx + 1) + '</div>'
+        + '<div class="wpa2-row"><label>Название</label><input type="text" class="gallery-title"></div>'
+        + '<div class="wpa2-row"><label>Цена</label><input type="text" class="gallery-price"></div>'
+        + '<div class="wpa2-row"><label>Изображение</label><input type="text" id="gallery-image-' + cardId + '" class="gallery-image"><button type="button" class="wpa2-media gallery-media-btn" data-media-input="gallery-image-' + cardId + '">Выбрать файл</button></div>'
+        + '<button type="button" class="wpa2-btn wpa2-cancel gallery-remove">Удалить проект</button>'
+      list.appendChild(wrapper)
+      wrapper.querySelector('.gallery-remove')?.addEventListener('click', () => wrapper.remove())
+      wrapper.querySelector('.gallery-media-btn')?.addEventListener('click', () => {
+        const input = wrapper.querySelector('.gallery-image')
+        openMediaForInput(input)
+      })
+    })
+
+    card.querySelectorAll('.gallery-remove').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('.gallery-item')?.remove())
+    })
+
     card.querySelector('[data-add-faq="' + block.id + '"]')?.addEventListener('click', () => {
       const list = card.querySelector('#faq-items-' + block.id)
       if (!list) return
@@ -403,6 +457,15 @@ function bindCardEvents(blocks) {
               date: item.querySelector('.news-date')?.value || '',
               link: item.querySelector('.news-link')?.value || '',
               image: item.querySelector('.news-image')?.value || ''
+            })
+          })
+        } else if (block.block_type === 'gallery') {
+          updatedData = []
+          card.querySelectorAll('.gallery-item').forEach(item => {
+            updatedData.push({
+              title: item.querySelector('.gallery-title')?.value || '',
+              price: item.querySelector('.gallery-price')?.value || '',
+              image: item.querySelector('.gallery-image')?.value || ''
             })
           })
         } else if (block.block_type === 'faq') {
