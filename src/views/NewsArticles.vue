@@ -141,22 +141,22 @@ h1 {
 
 
 .cards {
-  display: flex;
-  flex-wrap: wrap;
-  row-gap: 50px;
-  column-gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 20px;
 }
 
 .card {
-    width: calc(33.333% - 20px);
     display: flex;
     flex-direction: column;
-    gap: 30px;
-    transition: transform 0.3s ease;
+    gap: 18px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
 }
 
 .card:hover {
     transform: translateY(-8px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
 }
 
 .wrap-img {
@@ -199,25 +199,27 @@ h1 {
 .card-text {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
 }
 
 .card-title {
     color: #4B4B4B;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 500;
+    line-height: 1.2;
 }
 
-.card-desc {
+.card-description {
     color: #000000;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 300;
     opacity: 0.8;
+    line-height: 1.45;
 }
 
 .card-date {
     color: #C96744;
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 300;
     opacity: 0.8;
 }
@@ -249,16 +251,12 @@ h1 {
     }
 
     .cards {
-        gap: 16px;
-    }
-
-    .card {
-        width: calc(33.333% - 16px);
-        gap: 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 16px;
     }
 
     .wrap-img {
-        height: 200px;
+        height: 220px;
     }
 
     .card-title {
@@ -267,10 +265,11 @@ h1 {
 
     .card-description {
         font-size: 16px;
+        line-height: 1.4;
     }
 
     .card-date {
-        font-size: 16px;
+        font-size: 14px;
     }
 }
 
@@ -293,40 +292,30 @@ h1 {
     }
 
     .cards {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .card {
-        flex: none;
-        width: 100%;
-        min-width: 100%;
-        flex-direction: row;
-        align-items: stretch;
+        grid-template-columns: 1fr;
         gap: 16px;
     }
 
-    .wrap-img {
-        width: 140px;
-        height: auto;
-        flex-shrink: 0;
+    .card {
+        gap: 14px;
     }
 
-    .card-text {
-        gap: 10px;
-        justify-content: center;
+    .wrap-img {
+        width: 100%;
+        height: 210px;
     }
 
     .card-title {
-        font-size: 16px;
+        font-size: 18px;
     }
 
     .card-description {
         font-size: 14px;
+        line-height: 1.4;
     }
 
     .card-date {
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .btn {
@@ -356,25 +345,25 @@ h1 {
     }
 
     .cards {
-        gap: 10px;
+        gap: 14px;
     }
 
     .card {
         gap: 12px;
-        align-items: stretch;
     }
 
     .wrap-img {
-        width: 100px;
-        height: auto;
+        width: 100%;
+        height: 180px;
     }
 
     .card-title {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .card-description {
-        font-size: 12px;
+        font-size: 13px;
+        line-height: 1.35;
     }
 
     .card-date {

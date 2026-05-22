@@ -316,25 +316,42 @@ h2 {
   }
 
   .cards {
-    flex-direction: column;
-    gap: 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .card {
-    height: 280px;
+    height: auto;
+    min-height: 260px;
     max-width: 100%;
+    padding: 16px 20px;
   }
 
   .card-title {
-    font-size: 56px;
+    font-size: 48px;
+    line-height: 1;
   }
 
   .card-subtitle {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .card-desc {
-    height: 64px;
+    width: calc(100% + 40px);
+    margin: 0 -20px 8px -20px;
+    border-radius: 24px;
+    padding: 10px 14px 10px 18px;
+  }
+
+  .card-desc span {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .card-rectangle {
+    margin-left: -20px;
+    margin-right: -20px;
   }
 }
 
@@ -349,11 +366,12 @@ h2 {
   }
 
   .card {
-    height: 240px;
+    min-height: 220px;
+    padding: 14px 16px;
   }
 
   .card-title {
-    font-size: 48px;
+    font-size: 40px;
   }
 
   .card-subtitle {
@@ -361,12 +379,20 @@ h2 {
   }
 
   .card-desc {
-    height: 56px;
-    padding: 10px 14px 10px 24px;
+    width: calc(100% + 32px);
+    margin: 0 -16px 6px -16px;
+    padding: 8px 12px 8px 14px;
+    border-radius: 18px;
   }
 
   .card-desc span {
     font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .card-rectangle {
+    margin-left: -16px;
+    margin-right: -16px;
   }
 }
 </style>
