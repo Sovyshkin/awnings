@@ -1,9 +1,9 @@
 <template>
   <section class="what-we-doing">
     <h1>{{ sectionTitle || 'Беседки, навесы и мангальные зоны для тех, кто ценит удобство и современный внешний вид' }}</h1>
-      <h2>{{ sectionH2 || 'Что мы делаем' }}</h2>
+      <h2>Что мы делаем</h2>
       <div class="cards">
-        <component v-for="(card, index) in cards" :key="index" :is="getCardComponent(card)" v-bind="getCardProps(card)" class="card">
+        <div v-for="(card, index) in cards" :key="index" class="card">
           <div class="wrap-img">
             <img :src="card.image || cardImage" :alt="card.title" />
           </div>
@@ -12,7 +12,7 @@
             <span class="text-category">{{ card.category }}</span>
           </div>
           <span class="card-title">{{ card.title }}</span>
-        </component>
+        </div>
       </div>
   </section>
 </template>
@@ -23,24 +23,11 @@ import { fetchContentBlocks } from '../services/api'
 import cardImage from '../assets/card.png'
 
 const sectionTitle = ref('')
-const sectionH2 = ref('')
 const cards = ref([
   { title: 'Беседка для отдыха', category: 'Сад', image: cardImage },
   { title: 'Мангальные зоны', category: 'Барбекю', image: cardImage },
   { title: 'Навесы для автомобилей', category: 'Авто', image: cardImage }
 ])
-
-function getCardComponent(card) {
-  if (!card.link) return 'div'
-  if (card.link.startsWith('http')) return 'a'
-  return 'router-link'
-}
-
-function getCardProps(card) {
-  if (!card.link) return {}
-  if (card.link.startsWith('http')) return { href: card.link }
-  return { to: card.link }
-}
 
 function getImageUrl(imagePath) {
   if (!imagePath) return cardImage
@@ -52,10 +39,9 @@ function getImageUrl(imagePath) {
 
 async function loadWhatDoingData() {
   const blocks = await fetchContentBlocks('home')
-  const whatDoingBlock = blocks.find(b => b.block_type === 'features' && (b.block_name || '').includes('Что мы делаем'))
+  const whatDoingBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Что мы делаем')
   if (whatDoingBlock) {
     sectionTitle.value = whatDoingBlock.block_title || ''
-    sectionH2.value = whatDoingBlock.block_name || ''
     if (whatDoingBlock.block_data) {
       let data = whatDoingBlock.block_data
       if (typeof data === 'string') {
@@ -116,8 +102,6 @@ h2 {
     flex-direction: column;
     gap: 22px;
     transition: transform 0.3s ease;
-    text-decoration: none;
-    color: inherit;
 }
 
 .card:hover {

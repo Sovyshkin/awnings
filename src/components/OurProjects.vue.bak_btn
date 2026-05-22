@@ -75,7 +75,7 @@ onMounted(() => {
           </div>
           <span class="card-title">{{ card.title }}</span>
           <span class="card-price">от {{ card.price }} ₽</span>
-          
+          <button class="card-btn" @click="goToCard(index + 1)">В конфигуратор модели <div class="wrap-btn-img"><img class="btn-img" src="../assets/arrow-up-right.svg" alt=""></div></button>
         </div>
       </div>
       <div class="wrap-catalog">

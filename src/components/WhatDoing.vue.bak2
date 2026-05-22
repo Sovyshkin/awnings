@@ -1,7 +1,7 @@
 <template>
   <section class="what-we-doing">
     <h1>{{ sectionTitle || 'Беседки, навесы и мангальные зоны для тех, кто ценит удобство и современный внешний вид' }}</h1>
-      <h2>{{ sectionH2 || 'Что мы делаем' }}</h2>
+      <h2>Что мы делаем</h2>
       <div class="cards">
         <component v-for="(card, index) in cards" :key="index" :is="getCardComponent(card)" v-bind="getCardProps(card)" class="card">
           <div class="wrap-img">
@@ -23,7 +23,6 @@ import { fetchContentBlocks } from '../services/api'
 import cardImage from '../assets/card.png'
 
 const sectionTitle = ref('')
-const sectionH2 = ref('')
 const cards = ref([
   { title: 'Беседка для отдыха', category: 'Сад', image: cardImage },
   { title: 'Мангальные зоны', category: 'Барбекю', image: cardImage },
@@ -52,10 +51,9 @@ function getImageUrl(imagePath) {
 
 async function loadWhatDoingData() {
   const blocks = await fetchContentBlocks('home')
-  const whatDoingBlock = blocks.find(b => b.block_type === 'features' && (b.block_name || '').includes('Что мы делаем'))
+  const whatDoingBlock = blocks.find(b => b.block_type === 'features' && b.block_name === 'Что мы делаем')
   if (whatDoingBlock) {
     sectionTitle.value = whatDoingBlock.block_title || ''
-    sectionH2.value = whatDoingBlock.block_name || ''
     if (whatDoingBlock.block_data) {
       let data = whatDoingBlock.block_data
       if (typeof data === 'string') {

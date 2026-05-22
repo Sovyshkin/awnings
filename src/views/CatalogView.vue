@@ -233,14 +233,14 @@ const getProductImage = (product) => {
 }
 
 onMounted(async () => {
-  // Check for category in route query
-  if (route.query.category) {
-    activeCategory.value = route.query.category
-  }
-  
-  // Load data - start with all products (empty category slug)
   await loadCategories()
-  await loadProducts('')
+  let slug = ''
+  if (route.query.category) {
+    const q = String(route.query.category)
+    const cat = categories.value.find(c => String(c.id) === q || c.slug === q || decodeURIComponent(c.slug) === q)
+    if (cat) { activeCategory.value = cat.id; slug = cat.slug }
+  }
+  await loadProducts(slug)
 })
 </script>
 

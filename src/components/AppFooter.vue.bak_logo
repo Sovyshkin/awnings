@@ -2,7 +2,7 @@
     <footer class="footer">
         <div class="footer-main">
             <div class="footer-name">
-                <router-link to="/" class="footer-logo">СВОЯ ТЕРРИТОРИЯ</router-link>
+                <h2>{{ footerTitle || 'Название' }}</h2>
                 <p>{{ footerDescription || 'Производство и продажа металлических навесов в Екатеринбурге и Свердловской области. Доставка и монтаж по всей России.' }}</p>
             </div>
             <div class="footer-nav">
@@ -498,7 +498,4 @@ h3:hover {
         font-size: 12px;
     }
 }
-
-.footer-logo { display: inline-block; text-decoration: none; color: #fff; font-weight: 700; font-size: 28px; letter-spacing: 0.5px; margin-bottom: 16px; transition: opacity 0.2s ease; }
-.footer-logo:hover { opacity: 0.85; }
 </style>

@@ -316,20 +316,6 @@ const card = computed(() => {
   }
 })
 
-
-const getSelectedItemName = (group) => {
-  const name = selectedOptions.value[group.name]
-  return name || 'Нет'
-}
-const formatOptionPrice = (group) => {
-  const name = selectedOptions.value[group.name]
-  if (!name) return '0 ₽'
-  const item = group.items.find(i => i.name === name)
-  if (!item) return '0 ₽'
-  const price = Number(item.price) || 0
-  if (price === 0) return '0 ₽'
-  return '+' + price.toLocaleString('ru-RU') + ' ₽'
-}
 </script>
 
 <template>
@@ -368,9 +354,7 @@ const formatOptionPrice = (group) => {
                 </div>
             </div>
             <div class="card-info">
-                <h2 v-if="card.data && card.data.length > 0">Конфигуратор конструкции</h2>
-                <h2 v-else>Описание</h2>
-                <div v-if="!card.data || card.data.length === 0" class="no-config-desc">{{ card.desc || card.content || 'Описание скоро появится' }}</div>
+                <h2>Конфигуратор конструкции</h2>
                 <div class="group" v-for="item in card.data">
                     <h3>{{item.name}}</h3>
                     <div class="item-group" 
@@ -491,6 +475,86 @@ const formatOptionPrice = (group) => {
 
     <!-- Order Modal -->
     <Teleport to="body">
+        <div v-if="showOrderModal" class="order-modal-overlay" @click.self="closeOrderModal">
+            <div class="order-modal">
+                <button class="order-modal-close" @click="closeOrderModal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+
+                <!-- Step 1: Config Review -->
+                <div v-if="orderStep === 1" class="order-step">
+                    <h2 class="order-title">Ваша конфигурация</h2>
+                    <div class="order-config">
+                        <div class="order-product-info">
+                            <h3>{{ card.title }}</h3>
+                            <span class="order-price">{{ totalPrice.toLocaleString() }} ₽</span>
+                        </div>
+                        <div class="order-options">
+                            <div v-for="item in card.data" :key="item.name" class="order-option-group">
+                                <span class="order-option-label">{{ item.name }}</span>
+                                <div class="order-option-items">
+                                    <span v-for="i in item.items" 
+                                          :key="i.name"
+                                          class="order-option-item"
+                                          :class="{ 'selected': isOptionSelected(item.name, i.name) }">
+                                        {{ i.name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="order-btn" @click="goToFormStep">Далее</button>
+                </div>
+
+                <!-- Step 2: Form -->
+                <div v-if="orderStep === 2" class="order-form-step">
+                    <h2 class="order-form-title">Оформление заказа</h2>
+                    <form @submit.prevent="submitOrder">
+                        <div class="group-input">
+                            <label for="order-name">Ваше имя</label>
+                            <input type="text" id="order-name" v-model="orderFormData.name" placeholder="Введите ваше имя" required>
+                        </div>
+                        <div class="group-input">
+                            <label for="order-phone">Ваш телефон для связи</label>
+                            <input type="tel" id="order-phone" v-model="orderFormData.phone" placeholder="Введите ваш номер телефона" required>
+                        </div>
+                        <div class="group-input">
+                            <label for="order-email">Email</label>
+                            <input type="email" id="order-email" v-model="orderFormData.email" placeholder="example@mail.ru">
+                        </div>
+                        <div class="group-input">
+                            <label for="order-address">Адрес доставки</label>
+                            <input type="text" id="order-address" v-model="orderFormData.address" placeholder="Город, улица, дом">
+                        </div>
+                        <div class="order-mini-card">
+                            <span class="mini-card-title">{{ card.title }}</span>
+                            <span class="mini-card-price">{{ totalPrice.toLocaleString() }} ₽</span>
+                        </div>
+                        <div class="group-check">
+                            <input type="checkbox" id="order-agree" v-model="orderFormData.agree" required>
+                            <label for="order-agree">Я даю согласие на обработку персональных данных</label>
+                        </div>
+                        <button type="submit" class="btn" :disabled="orderSubmitting">
+                            {{ orderSubmitting ? 'Отправка...' : 'Заказать' }}
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 3: Success -->
+                <div v-if="orderStep === 3" class="order-step order-success">
+                    <div class="success-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17L4 12" stroke="#C96744" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h2 class="order-title">Спасибо за ваше обращение</h2>
+                    <p class="order-desc">Наши менеджеры обработают ваш запрос в ближайшее время</p>
+                    <button class="order-btn" @click="goToHome">На главную</button>
+                </div>
+            </div>
+        </div>
     </Teleport>
   </section>
 </template>
@@ -1742,6 +1806,4 @@ h3 {
   .cm-btn { width: 100%; padding: 16px; }
 }
 
-
-.no-config-desc { font-size: 16px; line-height: 1.6; color: #333; white-space: pre-wrap; padding: 20px 0; min-height: 200px; }
 </style>

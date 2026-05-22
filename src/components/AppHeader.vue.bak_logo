@@ -7,7 +7,6 @@
           <div class="frame frame-3" :class="{ 'active': menuStore.isOpen }"></div>
         </div>
       </div>
-      <router-link to="/" class="header-logo">СВОЯ ТЕРРИТОРИЯ</router-link>
       <router-link to="/catalog" class="btn">Каталог</router-link>
   </header>
   <Transition name="slide-down">
@@ -261,8 +260,4 @@ const menuStore = useMenuStore();
     transform: translateY(-6px) rotate(-45deg);
   }
 }
-
-.header-logo { position: relative; z-index: 102; text-decoration: none; color: #000; font-weight: 700; font-size: 18px; letter-spacing: 0.5px; transition: opacity 0.2s ease; white-space: nowrap; }
-.header-logo:hover { opacity: 0.7; }
-.header.dark .header-logo, .header.menu-open .header-logo { color: #fff; }
 </style>

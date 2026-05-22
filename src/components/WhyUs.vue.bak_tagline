@@ -2,7 +2,7 @@
 
 <template>
     <section class="why-choose-us">
-<h1>{{ props.customHeading || sectionHeading }}</h1>
+<h1>{{ sectionHeading }}</h1>
         <div class="wrap-content">
             <div class="text">
                 <h2>{{ sectionTitle }}</h2>
@@ -30,10 +30,6 @@ import whyUs1 from '../assets/why-us-1.svg'
 import whyUs2 from '../assets/why-us-2.svg'
 import whyUs3 from '../assets/why-us-3.svg'
 import whyUs4 from '../assets/why-us-4.svg'
-
-const props = defineProps({
-  customHeading: { type: String, default: '' }
-})
 
 const whyUsCards = ref([])
 const sectionHeading = ref('Практичность, современный вид и продуманная функция.')
